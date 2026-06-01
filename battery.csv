@@ -1,0 +1,65 @@
+Battery,Family,Edition,Year_Published,Year_Normed,Mean,SD,Reliability
+Bayley Scales of Infant and Toddler Development,Bayley,BSID,1969,,100,15,0.88
+Bayley Scales of Infant and Toddler Development,Bayley,BSID-II,1993,,100,15,0.88
+Bayley Scales of Infant and Toddler Development,Bayley,Bayley III,2005,,100,15,0.89
+Bayley Scales of Infant and Toddler Development,Bayley,Bayley IV,2023,,100,15,0.95
+Comprehensive Test of Nonverbal Intelligence,CTONI,CTONI,1997,,100,15,0.97
+Comprehensive Test of Nonverbal Intelligence,CTONI,CTONI-II,2009,,100,15,0.95
+Das-Naglieri Cognitive Assessment System,CAS,CAS,1997,,100,15,0.95
+Das-Naglieri Cognitive Assessment System,CAS,CAS-II,2014,,100,15,0.95
+Differential Ability Scales,DAS,DAS,1990,,100,15,
+Differential Ability Scales,DAS,DAS-II,2007,,100,15,0.97
+Differential Ability Scales,DAS,DAS-II NU,2023,,100,15,0.96
+General Ability Measure for Adults,GAMA,GAMA,1997,,100,15,0.9
+Kaufman Adult and Adolescent Intelligence Test,Kaufman,KAIT,1993,,100,15,0.97
+Kaufman Assessment Battery for Children,Kaufman,KABC,1983,,100,15,
+Kaufman Assessment Battery for Children,Kaufman,KABC-II,2004,,100,15,0.97
+Kaufman Assessment Battery for Children,Kaufman,KABC-II NU,2018,,100,15,0.97
+Kaufman Brief Intelligence Test,Kaufman,KBIT,1990,,100,15,
+Kaufman Brief Intelligence Test,Kaufman,KBIT-2,2004,,100,15,
+Leiter International Performance Scale,Leiter,Leiter,1979,,100,15,
+Leiter International Performance Scale,Leiter,Leiter-R,1997,,100,15,
+Leiter International Performance Scale,Leiter,Leiter-3,2013,,100,15,
+Naglieri Nonverbal Ability Test,NNAT,NNAT,2004,,100,15,
+Naglieri Nonverbal Ability Test,NNAT,NNAT-2,2007,,100,15,
+Reynolds Intellectual Assessment Scales,RIAS,RIAS,2003,2000,100,15,
+Reynolds Intellectual Assessment Scales,RIAS,RIAS-II,2015,,100,15,0.93
+Shipley Institute of Living Scale,Shipley,SILS,1946,,100,15,
+Shipley Institute of Living Scale,Shipley,Shipley-2,2009,,100,15,
+Slosson Intelligence Test,Slosson,SIT,1963,,100,15,
+Slosson Intelligence Test,Slosson,SIT expanded norms,1981,,100,15,
+Slosson Intelligence Test,Slosson,SIT-R,1991,,100,15,
+Slosson Intelligence Test,Slosson,SIT-R3,2002,,100,15,
+Slosson Intelligence Test,Slosson,SIT-4,2018,,100,15,
+Stanford-Binet,Stanford-Binet,SBLM,1962,1960,100,16,
+Stanford-Binet,Stanford-Binet,SBLM Updated,1973,1972,100,16,
+Stanford-Binet,Stanford-Binet,SBIV,1986,1985,100,16,
+Stanford-Binet,Stanford-Binet,SB5,2003,2001,100,15,0.98
+Test of General Reasoning Ability,TOGRA,TOGRA,2014,,100,15,
+Test of Nonverbal Intelligence,TONI,TONI,1982,,100,15,
+Test of Nonverbal Intelligence,TONI,TONI-2,1990,,100,15,
+Test of Nonverbal Intelligence,TONI,TONI-3,1997,,100,15,
+Test of Nonverbal Intelligence,TONI,TONI-4,2010,,100,15,
+Universal Nonverbal Intelligence Test,UNIT,UNIT,1998,,100,15,0.93
+Universal Nonverbal Intelligence Test,UNIT,UNIT-2,2016,,100,15,0.95
+Wechsler Adult Intelligence Scale,Wechsler,WAIS,1955,1954,100,15,0.97
+Wechsler Adult Intelligence Scale,Wechsler,WAIS-R,1981,1978,100,15,0.97
+Wechsler Adult Intelligence Scale,Wechsler,WAIS-III,1997,1995,100,15,0.98
+Wechsler Adult Intelligence Scale,Wechsler,WAIS-IV,2008,2007,100,15,0.98
+Wechsler Adult Intelligence Scale,Wechsler,WAIS-5,2024,2023,100,15,0.98
+Wechsler Intelligence Scale for Children,Wechsler,WISC,1949,1948,100,15,0.94
+Wechsler Intelligence Scale for Children,Wechsler,WISC-R,1974,1972,100,15,0.96
+Wechsler Intelligence Scale for Children,Wechsler,WISC-III,1991,1989,100,15,0.96
+Wechsler Intelligence Scale for Children,Wechsler,WISC-IV,2003,2001,100,15,0.97
+Wechsler Intelligence Scale for Children,Wechsler,WISC-V,2014,2013,100,15,0.96
+Wechsler Nonverbal Scale of Ability,Wechsler,WNA,2006,,100,15,0.9
+Weschler Abbreviated Scale of Intelligence,Wechsler,WASI,1999,,100,15,0.96
+Weschler Abbreviated Scale of Intelligence,Wechsler,WASI-II,2011,,100,15,0.97
+Wide Range Intelligence Test,WRIT,WRIT,1999,,100,15,
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ77,1977,,100,15,
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ R Standard,1989,1987,100,15,0.948
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ R Extended,1989,1987,100,15,0.972
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III,2001,1998,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III NU,2007,2007,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ IV,2014,2011,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ V,2025,2024,100,15,0.97
