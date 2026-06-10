@@ -13,11 +13,26 @@ color:
     pink: "#871f61"
     lightblue: "#D4E0E8"
   primary: blue
+  secondary: "#91B1C4"
   danger: pink
   info: lightblue
 
 typography:
   fonts:
-  - family: Roboto Condensed
-    source: google
-  base: Roboto Condensed
+    # Google Fonts
+    - family: Roboto Condensed
+      source: google
+    # Bunny Fonts
+    - family: Roboto
+      source: google
+
+  base:
+    family: Roboto Condensed
+    line-height: 1.25
+    size: 20px
+  headings:
+    family: Roboto
+    color: primary
+    weight: 600
+
+

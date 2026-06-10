@@ -3,3 +3,37 @@
   font-size: 14pt;
 }
 
+.nav-link { font-size: 20px; }
+
+table.cortable input[type='number'] {
+        text-align: center;
+        background-color: #D4E0E8;
+        padding: 0;
+        border: none;
+        width: 100px;
+        font-size: 1.15rem
+      }
+
+table.cortable .form-group {margin: 0}
+
+td {vertical-align: bottom;}
+
+
+table.cortable {
+  table-layout: fixed;
+}
+
+table.cortable th {
+  min-width: 100px;}
+
+  table.cortable td {
+  text-align:center;}
+
+.corrowname{text-align: right; padding-right: 8px}
+.corinput{background-color: #D4E0E8;}
+
+.rt-td-inner {
+  padding-bottom: 0;
+}
+
+
