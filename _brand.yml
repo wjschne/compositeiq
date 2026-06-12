@@ -13,19 +13,11 @@ color:
     pink: "#871f61"
     lightblue: "#D4E0E8"
   primary: blue
-  secondary: "#91B1C4"
+  secondary: lightblue
   danger: pink
   info: lightblue
 
 typography:
-  fonts:
-    # Google Fonts
-    - family: Roboto Condensed
-      source: google
-    # Bunny Fonts
-    - family: Roboto
-      source: google
-
   base:
     family: Roboto Condensed
     line-height: 1.25
@@ -34,5 +26,10 @@ typography:
     family: Roboto
     color: primary
     weight: 600
+
+defaults:
+  bootstrap:
+    tooltip-bg: "#ddd"
+    tooltip-border-radius: 4px
 
 

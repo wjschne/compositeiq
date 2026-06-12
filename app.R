@@ -13,13 +13,11 @@ conflicts_prefer(
   .quiet = TRUE
 )
 
-
 library(shiny)
 library(bsicons)
 library(reactable)
 library(shinyjs)
 library(keys)
-library(toastui)
 library(dplyr)
 library(tibble)
 library(readr)
@@ -32,7 +30,82 @@ library(purrr)
 library(shinyvalidate)
 library(shinyMatrix)
 library(tidyr)
+library(curl)
+library(stringr)
+library(fresh)
 
+
+# constants ####
+my_primary <- "#1f6187"
+my_primary_medium <- tinter::lighten(my_primary, .5)
+my_primary_light <- tinter::lighten(my_primary, .2)
+my_primary_lightest <- tinter::lighten(my_primary, .1)
+
+ymd(NA)
+
+# helper functions ----
+
+prob_label <- function(
+  p,
+  accuracy = 0.01,
+  digits = NULL,
+  max_digits = NULL,
+  remove_leading_zero = TRUE,
+  round_zero_one = TRUE
+) {
+  if (is.null(digits)) {
+    l <- scales::number(p, accuracy = accuracy)
+  } else {
+    sig_digits <- abs(ceiling(log10(p + p / 1e+09)) - digits)
+    pgt99 <- p > 0.99
+    sig_digits[pgt99] <- abs(
+      ceiling(log10(1 - p[pgt99])) -
+        digits +
+        1
+    )
+    sig_digits[
+      ceiling(log10(p)) == log10(p) & (-log10(p) >= digits)
+    ] <- sig_digits[
+      ceiling(log10(p)) == log10(p) &
+        (-log10(p) >= digits)
+    ] -
+      1
+    sig_digits[is.infinite(sig_digits)] <- 0
+    l <- purrr::map2_chr(p, sig_digits, formatC, format = "f", flag = "#")
+  }
+  if (remove_leading_zero) {
+    l <- sub("^-0", "-", sub("^0", "", l))
+  }
+  if (round_zero_one) {
+    l[p == 0] <- "0"
+    l[p == 1] <- "1"
+    l[p == -1] <- "-1"
+  }
+  if (!is.null(max_digits)) {
+    if (round_zero_one) {
+      l[round(p, digits = max_digits) == 0] <- "0"
+      l[round(p, digits = max_digits) == 1] <- "1"
+      l[round(p, digits = max_digits) == -1] <- "-1"
+    } else {
+      l[round(p, digits = max_digits) == 0] <- paste0(
+        ".",
+        paste0(rep("0", max_digits), collapse = "")
+      )
+      l[round(p, digits = max_digits) == 1] <- paste0(
+        "1.",
+        paste0(rep("0", max_digits), collapse = "")
+      )
+      l[round(p, digits = max_digits) == -1] <- paste0(
+        "-1.",
+        paste0(rep("0", max_digits), collapse = "")
+      )
+    }
+  }
+  l <- sub(pattern = "-", replacement = "−", x = l)
+  Encoding(l) <- "UTF-8"
+  dim(l) <- dim(p)
+  l
+}
 
 make_actions <- function(row_id, tbl, name, disabled_edit, disabled_delete) {
   if (disabled_edit) {
@@ -132,10 +205,13 @@ long_r <- function(
     b6 * different
 }
 
+
 options(
-  shiny.useragg = TRUE,
-  shiny.launch.browser = .rs.invokeShinyWindowExternal
+  shiny.useragg = TRUE
+  # shiny.launch.browser = .rs.invokeShinyWindowExternal
 )
+
+# data ####
 
 d <- readr::read_csv("battery.csv", show_col_types = FALSE) |>
   mutate(
@@ -172,10 +248,10 @@ d_edition <- d |>
 
 d_score <- tibble(
   score_id = 1:3,
-  Score = c(100, 120, 110),
-  Date = (as.Date(c("2026-06-02", "2021-04-05", "2020-01-15"))),
+  Score = c(75, 70, 72),
+  Date = (as.Date(c("2026-06-02", "2021-04-05", "2024-01-15"))),
   Weight = 1,
-  edition_id = c(52L, 63L, 15L),
+  edition_id = c(54L, 66L, 16L),
   flynn_id = 1L
 ) |>
   arrange(Date)
@@ -218,15 +294,27 @@ d_flynn_item <- tibble(
 ui <- page_navbar(
   title = "Composite IQ Calculator",
   window_title = "Composite IQ Calculator",
-  theme = bs_theme(brand = TRUE),
-  id = "mainPanel",
-  header = tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "main.css"),
-    useShinyjs(),
-    useKeys(),
-    keysInput("enter_key", "enter", global = TRUE)
+  theme = bs_theme(
+    brand = TRUE,
+    bootswatch = "minty",
+    version = 5,
+    `tooltip-bg` = my_primary,
+    `tooltip-opacity` = 1,
+    `tooltip-border-radius` = "6px",
+    `tooltip-padding-y` = "10px",
+    `tooltip-padding-x` = "12px"
   ),
-  ## entry ----
+  id = "mainPanel",
+  header = tagList(
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "main.css"),
+      useShinyjs(),
+      useKeys(),
+      keysInput("enter_key", "enter", global = TRUE),
+      use_googlefont("Roboto Condensed")
+    )
+  ),
+  ## score ----
   nav_panel(
     "Data Entry",
     value = "score",
@@ -235,7 +323,7 @@ ui <- page_navbar(
       style = "margin-top: 0px;",
       fluidRow(
         column(
-          width = 4,
+          width = 3,
           textInput(
             "txtPerson",
             label = tagList(
@@ -245,7 +333,12 @@ ui <- page_navbar(
                   "info-circle-fill",
                   class = "text-info"
                 ),
-                "This information is used to create a report. Like all other information in this app, the name is private because it stays locally on your machine. It is never sent to a third-party server."
+                tagList(
+                  p("This information is used to create a report."),
+                  "Like all other information in this app, the",
+                  strong("Name"),
+                  "is private because it stays locally on your machine. It is never sent to a third-party server."
+                )
               )
             ),
             placeholder = "Person's Name",
@@ -253,7 +346,7 @@ ui <- page_navbar(
           )
         ),
         column(
-          width = 4,
+          width = 3,
           dateInput(
             "dateBirthdate",
             label = tagList(
@@ -263,7 +356,15 @@ ui <- page_navbar(
                   "info-circle-fill",
                   class = "text-info"
                 ),
-                "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores. Like all other information in this app, the birthdate is private because it stays locally on your machine. It is never sent to a third-party server."
+                tagList(
+                  p(
+                    "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores."
+                  ),
+
+                  "Like all other information in this app, the",
+                  strong("Birthdate"),
+                  "is private because it stays locally on your machine. It is never sent to a third-party server."
+                )
               )
             ),
             width = "100%",
@@ -271,7 +372,18 @@ ui <- page_navbar(
           )
         ),
         column(
-          width = 4,
+          width = 3,
+          numericInput(
+            "defaultReliability",
+            "Default Reliability",
+            min = 0,
+            max = 1,
+            step = 0.01,
+            value = 0.96
+          )
+        ),
+        column(
+          width = 3,
           style = "display: flex; justify-content: flex-end; flex-direction: row; align-items: flex-end;",
           div(
             # style = "display: flex; justify-content: flex-end; flex-direction: row; align-items: flex-end;",
@@ -284,11 +396,24 @@ ui <- page_navbar(
         )
       )
     ),
-    fluidRow(column(
-      width = 12,
-      reactableOutput("grdScore", height = "auto")
-    )),
-    h4("Correlations"),
+    fluidRow(
+      column(
+        width = 12,
+        reactableOutput("grdScore", height = "auto")
+      )
+    ),
+    h4("Composite IQ"),
+    div(
+      reactableOutput("grdIQ", height = "auto")
+    )
+  ),
+  ## correlations ----
+  nav_panel(
+    "Correlations",
+    value = "correlations",
+    p(
+      "Estimated correlations can be overridden by changing values in the lower half of the matrix."
+    ),
     fluidRow(column(
       12,
       uiOutput("tbl_cor")
@@ -305,7 +430,7 @@ ui <- page_navbar(
           ),
           ":"
         ),
-        p(
+        tagList(
           "Breit, M., Scherrer, V., Tucker-Drob, E. M., & Preckel, F. (2024). The stability of cognitive abilities: A meta-analytic review of longitudinal studies.",
           tags$em("Psychological Bulletin, 150", .noWS = "after"),
           "(4), 399–439."
@@ -316,26 +441,9 @@ ui <- page_navbar(
       src = "stability_equation.svg",
       width = 800,
       style = "background-color: white;"
-    ),
-    fluidRow(
-      column(
-        width = 9,
-        tags$p(
-          tags$strong("Privacy Note: "),
-          "All information entered here is private. Because this app is deployed via ",
-          tags$a(
-            href = "https://posit-dev.github.io/r-shinylive/",
-            "shinylive",
-            .noWS = "outside"
-          ),
-          ", the app runs entirely on your local machine in your browser's code sandbox. That is, once the app itself is downloaded from its host server, no information entered into this app is ever sent back to the server. Thus, no outside party, not even the app's developer, will ever have access to the data entered here."
-        )
-      ),
-      column(
-        width = 3,
-      )
     )
   ),
+  ## family ----
   nav_panel(
     "Edit Battery",
     value = "battery",
@@ -343,7 +451,6 @@ ui <- page_navbar(
     layout_sidebar(
       # border = FALSE,
       sidebar = sidebar(
-        ## family ----
         open = "always",
         width = 425,
         div(
@@ -404,28 +511,46 @@ ui <- page_navbar(
         reactableOutput("grdFlynnItem")
       )
     )
+  ),
+  nav_spacer(),
+  nav_item(
+    tooltip(
+      span("Privacy Note", bs_icon("info-circle-fill", class = "text-info")),
+      tagList(
+        h4("Privacy", class = "text-white"),
+        p(
+          "All information entered into this app is private."
+        ),
+        span(
+          "Privacy is assured because the app is deployed via ",
+          tags$a(
+            href = "https://posit-dev.github.io/r-shinylive/",
+            "shinylive",
+            .noWS = "outside",
+            style = "color: white"
+          ),
+          ", meaning that the app runs entirely on your local machine in your browser's code sandbox. That is, once the app itself is downloaded from its host server, no information entered into this app is ever sent back to the server. Thus, no outside party, not even the app's developer, will ever have access to the data entered here."
+        )
+      ),
+      options = list(delay = list(show = 100, hide = 800))
+    )
   )
 )
+
 
 # server ----
 server <- function(input, output, session) {
   # constants ----
-
-  my_primary <- "#1f6187"
-  my_primary_medium <- tinter::lighten(my_primary, .5)
-  my_primary_light <- tinter::lighten(my_primary, .2)
-  my_primary_lightest <- tinter::lighten(my_primary, .1)
-
-  set_grid_theme(
-    row.even.background = my_primary_lightest,
-    cell.normal.border = my_primary_light,
-    cell.normal.showVerticalBorder = TRUE,
-    cell.normal.showHorizontalBorder = TRUE,
-    cell.header.background = my_primary,
-    cell.header.text = "#FEFEFE",
-    cell.selectedHeader.background = "black",
-    cell.focused.border = my_primary
-  )
+  # set_grid_theme(
+  #   row.even.background = my_primary_lightest,
+  #   cell.normal.border = my_primary_light,
+  #   cell.normal.showVerticalBorder = TRUE,
+  #   cell.normal.showHorizontalBorder = TRUE,
+  #   cell.header.background = my_primary,
+  #   cell.header.text = "#FEFEFE",
+  #   cell.selectedHeader.background = "black",
+  #   cell.focused.border = my_primary
+  # )
 
   myreactabletheme <- reactableTheme(
     borderColor = my_primary_light,
@@ -445,7 +570,10 @@ server <- function(input, output, session) {
 
   ## valid person ----
   iv_person <- InputValidator$new()
-  iv_person$add_rule("dateBirthdate", sv_required())
+  iv_person$add_rule(
+    "dateBirthdate",
+    sv_required("Required. Approximate, if unknown.")
+  )
   iv_person$enable()
 
   ## valid family ----
@@ -497,10 +625,27 @@ server <- function(input, output, session) {
   iv_score_edit$add_rule("weight_new", sv_required())
   iv_score$add_rule("score_edition_new", sv_required())
   iv_score$add_rule("score_edition_new", sv_not_equal("NA", "Required"))
+  iv_score_edit$add_rule("date_new", function(value) {
+    if (isTruthy(input$score_edition_new)) {
+      pd <- rd_edition() |>
+        filter(edition_id == input$score_edition_new) |>
+        pull(Year_Published)
+      if (year(value) < pd) {
+        "Date Given is before test's publication."
+      }
+    }
+  })
+  iv_score_edit$add_rule(
+    "date_new",
+    sv_gt(
+      isolate(input$dateBirthdate),
+      "Date is before the person's birthdate."
+    )
+  )
   iv_score$add_validator(iv_score_edit)
 
   # reactive data ----
-  r_cor <- reactiveVal()
+  rd_current <- reactiveVal()
   cor_n <- reactiveVal(0L)
   r_row <- reactiveVal(list(
     id = integer(0),
@@ -550,6 +695,44 @@ server <- function(input, output, session) {
     d_f |>
       pull(flynn_id)
   })
+
+  # functions ----
+  flynn_correction <- function(
+    score,
+    publication_year,
+    norm_year,
+    administration_date,
+    iflynn_id = 1L
+  ) {
+    correction <- rd_flynn_item() |>
+      dplyr::filter(flynn_id == iflynn_id) |>
+      mutate(Until = ifelse(is.na(Until), Inf, Until)) |>
+      mutate(
+        norm_year = ifelse(is.na(norm_year), publication_year - 1L, norm_year)
+      ) |>
+      filter(Until > norm_year) |>
+      arrange(Until) |>
+      mutate(From = dplyr::lag(Until, default = -Inf), .before = Until) |>
+      mutate(From = ifelse(is.infinite(From), norm_year, From)) |>
+      mutate(
+        administration_date = administration_date,
+        date_from = ymd(From * 10000 + 101),
+        date_until = ymd(ifelse(is.infinite(Until), NA, Until) * 10000 + 101)
+      ) |>
+      mutate(
+        date_until = if_else(
+          is.na(date_until),
+          administration_date,
+          date_until
+        ),
+        years_elapsed = interval(date_from, date_until) / dyears(1),
+        correction = years_elapsed * Effect / -10
+      ) |>
+      filter(years_elapsed >= 0) |>
+      pull(correction) |>
+      sum()
+    score + correction
+  }
 
   # Grids ----
 
@@ -685,7 +868,7 @@ server <- function(input, output, session) {
       iv_family_add$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -731,7 +914,7 @@ server <- function(input, output, session) {
       iv_family_add$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1043,7 +1226,7 @@ server <- function(input, output, session) {
       iv_edition_add$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1201,6 +1384,7 @@ server <- function(input, output, session) {
 
   ## score ----
   output$grdScore <- renderReactable({
+    req(input$dateBirthdate)
     cor_n(nrow(rd_score()))
     current_data <- rd_score() |>
       left_join(
@@ -1216,13 +1400,26 @@ server <- function(input, output, session) {
         by = join_by(flynn_id)
       ) |>
       mutate(
-        Age = as.numeric(time_length(
-          interval(input$dateBirthdate, Date),
-          "years"
-        ))
+        Age = as.numeric(
+          time_length(
+            interval(input$dateBirthdate, Date),
+            "years"
+          )
+        ),
+        Corrected = pmap_dbl(
+          list(
+            score = Score,
+            publication_year = Year_Published,
+            norm_year = Year_Normed,
+            administration_date = Date,
+            iflynn_id = flynn_id
+          ),
+          flynn_correction
+        )
       ) |>
       select(
         Score,
+        Corrected,
         Battery,
         Edition,
         Year_Published,
@@ -1232,6 +1429,8 @@ server <- function(input, output, session) {
         Weight,
         everything()
       )
+
+    rd_current(current_data)
 
     current_data$Actions <- pmap_chr(
       tibble(
@@ -1243,6 +1442,10 @@ server <- function(input, output, session) {
       ),
       make_actions
     )
+
+    corrected_width <- 4L + 1L * any(round(current_data$Corrected, 1) >= 100)
+    score_width <- 2L + 1L * any(round(current_data$Score, 0) >= 100)
+    age_width <- 3L + 1L * any(round(current_data$Age, 1) >= 10)
 
     reactable(
       current_data,
@@ -1268,10 +1471,26 @@ server <- function(input, output, session) {
         Mean = colDef(show = FALSE),
         SD = colDef(show = FALSE),
         Reliability = colDef(show = FALSE),
-        Score = colDef(align = "center"),
+        Score = colDef(align = "center", html = TRUE, cell = \(x) {
+          formatC(x, digits = 0, format = "f", width = score_width) |>
+            stringr::str_replace_all(" ", "&numsp;")
+        }),
+        Corrected = colDef(align = "center", html = TRUE, cell = \(x) {
+          formatC(x, digits = 1, format = "f", width = corrected_width) |>
+            stringr::str_replace_all(" ", "&numsp;")
+        }),
         Age = colDef(
           align = "center",
-          format = colFormat(digits = 1)
+          html = TRUE,
+          style = function(value) {
+            if (value < 0) {
+              list(color = "red")
+            }
+          },
+          cell = \(x) {
+            formatC(x, digits = 1, format = "f", width = age_width) |>
+              stringr::str_replace_all(" ", "&numsp;")
+          }
         ),
         Date = colDef(align = "center"),
         Flynn = colDef(align = "center"),
@@ -1518,7 +1737,7 @@ server <- function(input, output, session) {
       iv_score$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1539,6 +1758,13 @@ server <- function(input, output, session) {
     showModal(
       modalDialog(
         title = paste("Edit", dr_new$Edition, "Score"),
+        hidden(
+          numericInput(
+            "score_edition_new",
+            label = NULL,
+            value = dr_new$edition_id
+          )
+        ),
         numericInput(
           "score_new",
           "Score",
@@ -1606,7 +1832,7 @@ server <- function(input, output, session) {
       iv_score$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1764,7 +1990,7 @@ server <- function(input, output, session) {
       iv_flynn$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1808,7 +2034,7 @@ server <- function(input, output, session) {
       iv_flynn$disable()
       removeModal()
     } else {
-      showNotification("Missing data", type = "error")
+      showNotification("Fix incorrect/missing data", type = "error")
     }
   })
 
@@ -1925,7 +2151,7 @@ server <- function(input, output, session) {
         iv_flynn_item$disable()
         removeModal()
       } else {
-        showNotification("Missing data", type = "error")
+        showNotification("Fix incorrect/missing data", type = "error")
       }
     }
   })
@@ -2016,13 +2242,13 @@ server <- function(input, output, session) {
   })
   # correlation ----
 
-  output$tbl_cor <- renderUI({
+  r_cor <- reactive({
     n <- cor_n()
     req(n > 1L)
     d_s <- isolate(rd_score()) |>
       left_join(isolate(rd_edition()), join_by("edition_id"))
-    matrix(d_s$Score) |>
-      `rownames<-`(paste0(d_s$Edition, " (", d_s$Date, ")"))
+    # matrix(d_s$Score) |>
+    # `rownames<-`(paste0(d_s$Edition, " (", d_s$Date, ")"))
 
     bday <- isolate(input$dateBirthdate)
     # bday <- as.Date("2010-11-01")
@@ -2053,21 +2279,27 @@ server <- function(input, output, session) {
       ) |>
       mutate(
         r = long_r(
-          age = min(Age_x, Age_y),
+          age = ifelse(Age_x < Age_y, Age_x, Age_y),
           interval = abs(Age_x - Age_y),
-          different = family_id_y == family_id_x
+          different = (family_id_y != family_id_x) * 1
         )
       )
+
     m_r <- matrix(NA_real_, nrow = nrow(d_s), ncol = nrow(d_s))
     m_r[cbind(d_r$row_id_x, d_r$row_id_y)] <- d_r$r
     m_r[cbind(d_r$row_id_y, d_r$row_id_x)] <- d_r$r
     diag(m_r) <- 1
-    r_cor(m_r)
 
     # diag(m_r) <- 1
     colnames(m_r) <- d_s$Edition
     rownames(m_r) <- d_s$Edition
+    return(m_r)
+  })
 
+  output$tbl_cor <- renderUI({
+    d_s <- isolate(rd_score()) |>
+      left_join(isolate(rd_edition()), join_by("edition_id"))
+    m_r <- r_cor()
     num_rows <- nrow(m_r)
     num_cols <- nrow(m_r)
     # Generate HTML rows
@@ -2148,10 +2380,13 @@ server <- function(input, output, session) {
     for (i in seq_len(n)) {
       for (j in seq_len(n)) {
         if (i < j) {
+          # mr[cbind(c(i, j), c(j, i))] <- input[[mirror_id]]
           local({
             jj <- j
             ii <- i
+
             mirror_id <- paste0("cell_", jj, "_", ii) # the symmetric upper cell
+
             output[[paste0("display_", ii, "_", jj)]] <- renderText({
               val <- input[[mirror_id]]
               if (is.null(val) || is.na(val)) {
@@ -2164,6 +2399,89 @@ server <- function(input, output, session) {
         }
       }
     }
+    # r_cor(mr)
+  })
+
+  # composite iq ----
+  output$grdIQ <- renderReactable({
+    req(rd_current())
+    cor_n(nrow(rd_score()))
+    m_r <- r_cor()
+    for (i in seq(cor_n())) {
+      for (j in seq(cor_n())) {
+        if (isTruthy(input[[paste0("cell_", 1, "_", 1)]])) {
+          m_r[i, j] <- as.numeric(input[[paste0("cell_", 1, "_", 1)]])
+        }
+      }
+    }
+
+    iq_var <- sum(r_cor())
+    iq_sd <- sqrt(iq_var)
+    d_s <- rd_current() |>
+      rename(Uncorrected = Score) |>
+      mutate(id = row_number()) |>
+      select(id, Uncorrected, Corrected, Mean, SD, Reliability) |>
+      pivot_longer(c(Uncorrected, Corrected)) |>
+      mutate(
+        z = (value - Mean) / SD,
+        SS = z * 15 + 100,
+        SEE = 15 * sqrt(Reliability - Reliability^2),
+        UB = qnorm(.975) * SEE + SS,
+        LB = qnorm(.025) * SEE + SS
+      )
+
+    d_iq <- d_s |>
+      summarise(SS = sum(SS), rxx = sum(Reliability), k = n(), .by = name) |>
+      mutate(
+        rxx = (rxx - k + sum(m_r)) / sum(m_r),
+        SS = (SS - 100 * k) / sqrt(sum(m_r)) + 100,
+        SEE = 15 * sqrt(rxx - rxx^2),
+        UB = qnorm(.975) * SEE + SS,
+        LB = qnorm(.025) * SEE + SS,
+        CI = paste0(scales::number(LB, 1), "&ndash;", scales::number(UB, 1)),
+        Percentile = as.character(
+          as.numeric(
+            prob_label(
+              pnorm(SS, 100, 15),
+              digits = 2
+            )
+          ) *
+            100
+        )
+      )
+
+    d_display <- d_iq |>
+      select(-UB, -LB, -SEE, -k) |>
+      rename(Reliability = rxx, type = name) |>
+      mutate(
+        SS = round(SS, 0) |> as.integer() |> as.character(),
+        Reliability = prob_label(Reliability, digits = 2)
+      ) |>
+      select(
+        `Composite IQ` = SS,
+        Percentile,
+        CI,
+        Reliability,
+        everything()
+      ) |>
+      pivot_longer(-type, names_to = "rownames") |>
+      pivot_wider(names_from = type)
+
+    reactable(
+      d_display,
+      showSortIcon = FALSE,
+      pagination = FALSE,
+      striped = TRUE,
+      defaultExpanded = TRUE,
+      theme = myreactabletheme,
+      highlight = TRUE,
+      fullWidth = FALSE,
+      columns = list(
+        Uncorrected = colDef(align = "center", html = TRUE, width = 150),
+        Corrected = colDef(align = "center", html = TRUE, width = 150),
+        rownames = colDef(name = "", align = "right", width = 150)
+      )
+    )
   })
 }
 

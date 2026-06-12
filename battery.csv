@@ -15,8 +15,9 @@ Kaufman Adult and Adolescent Intelligence Test,Kaufman,KAIT,1993,,100,15,0.97
 Kaufman Assessment Battery for Children,Kaufman,KABC,1983,,100,15,
 Kaufman Assessment Battery for Children,Kaufman,KABC-II,2004,,100,15,0.97
 Kaufman Assessment Battery for Children,Kaufman,KABC-II NU,2018,,100,15,0.97
-Kaufman Brief Intelligence Test,Kaufman,KBIT,1990,,100,15,
-Kaufman Brief Intelligence Test,Kaufman,KBIT-2,2004,,100,15,
+Kaufman Brief Intelligence Test,Kaufman,KBIT,1990,,100,15,0.94
+Kaufman Brief Intelligence Test,Kaufman,KBIT-2,2004,2003,100,15,0.93
+Kaufman Brief Intelligence Test,Kaufman,KBIT-2 Revised,2022,2021,100,15,0.93
 Leiter International Performance Scale,Leiter,Leiter,1979,,100,15,
 Leiter International Performance Scale,Leiter,Leiter-R,1997,,100,15,
 Leiter International Performance Scale,Leiter,Leiter-3,2013,,100,15,
@@ -55,11 +56,13 @@ Wechsler Intelligence Scale for Children,Wechsler,WISC-V,2014,2013,100,15,0.96
 Wechsler Nonverbal Scale of Ability,Wechsler,WNA,2006,,100,15,0.9
 Weschler Abbreviated Scale of Intelligence,Wechsler,WASI,1999,,100,15,0.96
 Weschler Abbreviated Scale of Intelligence,Wechsler,WASI-II,2011,,100,15,0.97
-Wide Range Intelligence Test,WRIT,WRIT,1999,,100,15,
-Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ77,1977,,100,15,
+Wide Range Intelligence Test,WRIT,WRIT,1999,,100,15,0.95
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ77,1977,,100,15,0.97
 Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ R Standard,1989,1987,100,15,0.948
 Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ R Extended,1989,1987,100,15,0.972
-Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III,2001,1998,100,15,0.97
-Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III NU,2007,2007,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III Standard,2001,1998,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III Extended,2001,1998,100,15,0.98
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III NU Standard,2007,2007,100,15,0.97
+Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ III NU Extended,2007,2007,100,15,0.98
 Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ IV,2014,2011,100,15,0.97
 Woodcock-Johnson Tests of Cognitive Ability,Woodcock-Johnson,WJ V,2025,2024,100,15,0.97

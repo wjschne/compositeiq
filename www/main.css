@@ -3,37 +3,39 @@
   font-size: 14pt;
 }
 
-.nav-link { font-size: 20px; }
+.nav-link { font-size: 15pt; }
 
 table.cortable input[type='number'] {
-        text-align: center;
-        background-color: #D4E0E8;
-        padding: 0;
-        border: none;
-        width: 100px;
-        font-size: 1.15rem
-      }
-
-table.cortable .form-group {margin: 0}
-
-td {vertical-align: bottom;}
-
-
-table.cortable {
-  table-layout: fixed;
+ text-align: center;
+ background-color: #D4E0E8;
+ padding: 0;
+ border: none;
+ width: 150px;
+ font-size: 1.15rem
 }
 
-table.cortable th {
-  min-width: 100px;}
+td, th {vertical-align: bottom;}
 
-  table.cortable td {
-  text-align:center;}
+.cortable {table-layout: fixed;}
+
+.cortable th {min-width: 100px;}
+
+.cortable td {text-align:center;}
+
+.cortable .form-group {margin: 0}
 
 .corrowname{text-align: right; padding-right: 8px}
+
 .corinput{background-color: #D4E0E8;}
 
-.rt-td-inner {
-  padding-bottom: 0;
-}
+.rt-td-inner {padding-bottom: 0;}
 
+.cordisplay {min-width: 150px}
+
+.tooltip-inner {
+  text-align: left !important;
+  max-width: 400px !important; /* Increase width limit */
+  width: max-content !important; /* Grow dynamically with long text */
+  white-space: normal !important; /* Forces standard line wrapping */
+}
 
