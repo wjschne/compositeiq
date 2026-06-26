@@ -851,6 +851,28 @@ ui <- page_navbar(
       )
     )
   ),
+  nav_panel(
+    "Calculations",
+    value = "calculations",
+    h5("Composite Score"),
+    tags$img(
+      src = "composite_equation.svg",
+      width = 400,
+      style = "background-color: white;"
+    ),
+    h5("Composite Reliability"),
+    tags$img(
+      src = "composite_reliability_equation.svg",
+      width = 650,
+      style = "background-color: white;"
+    ),
+    h5("Confidence Intervals"),
+    tags$img(
+      src = "ci_equation.svg",
+      width = 1000,
+      style = "background-color: white;"
+    )
+  ),
   nav_spacer(),
   nav_item(input_dark_mode(id = "dark_mode")),
   nav_item(
