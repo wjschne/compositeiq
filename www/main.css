@@ -1,3 +1,29 @@
+#my_file_input_container {
+        height: 32.75px;
+      }
+
+#my_file_input_container .form-control {
+        height: 32.75px;
+        color: transparent;
+        width:0;
+        border:none;
+        display: none;
+      }
+#my_file_input_container .btn-file {
+        height: 32.75px;
+        padding-top: 5px;
+      }
+
+ #my_file_input_container .form-group {
+        height: 32.75px;
+      }
+
+
+#dl {
+  margin-bottom: 16px !important;
+  height: 32:75px !important;
+}
+
 .tui-grid-container {
   font-family: "Roboto Condensed", Arial, sans;
   font-size: 14pt;
@@ -5,9 +31,18 @@
 
 .nav-link { font-size: 15pt; }
 
+#dl {
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-bottom: 2px;
+}
+
+#nidl {
+  color: none;
+}
+
 table.cortable input[type='number'] {
  text-align: center;
- background-color: #D4E0E8;
  padding: 0;
  border: none;
  width: 150px;
@@ -26,16 +61,17 @@ td, th {vertical-align: bottom;}
 
 .corrowname{text-align: right; padding-right: 8px}
 
-.corinput{background-color: #D4E0E8;}
-
 .rt-td-inner {padding-bottom: 0;}
+.rt-td-inner:has(button) {padding-bottom: 2px; padding-top: 1px;}
 
 .cordisplay {min-width: 150px}
 
 .tooltip-inner {
   text-align: left !important;
-  max-width: 400px !important; /* Increase width limit */
+  max-width: 500px !important; /* Increase width limit */
   width: max-content !important; /* Grow dynamically with long text */
   white-space: normal !important; /* Forces standard line wrapping */
 }
+
+
 

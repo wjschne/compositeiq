@@ -12,10 +12,13 @@ color:
     blue: "#1f6187"
     pink: "#871f61"
     lightblue: "#D4E0E8"
+    striped: "#11111122"
   primary: blue
   secondary: lightblue
   danger: pink
   info: lightblue
+  light: "#F1F1F1"
+  dark: "#404041"
 
 typography:
   base:
