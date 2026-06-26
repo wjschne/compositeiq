@@ -51,7 +51,16 @@ library(writexl)
 library(readxl)
 library(tinter)
 library(ggnormalviolin)
+library(showtext)
+library(sysfonts)
 
+font_add(
+  "Roboto Condensed",
+  regular = "www/fonts/RobotoCondensed-Regular.ttf",
+  bold = "www/fonts/RobotoCondensed-Bold.ttf",
+  italic = "www/fonts/RobotoCondensed-Italic.ttf"
+)
+showtext_auto()
 
 # constants ####
 my_primary <- "#1f6187"
@@ -511,7 +520,8 @@ d_score <- tibble(
   edition_id = c(54L, 66L, 16L),
   flynn_id = 1L
 ) |>
-  arrange(Date)
+  arrange(Date) %>%
+  filter(FALSE)
 
 d_flynn <- tibble(Flynn = c("Default", "Always 2.94"), flynn_id = 1:2)
 
@@ -2806,6 +2816,15 @@ server <- function(input, output, session) {
   # correlation ----
   observe({
     n <- cor_n()
+    if (n < 2L) {
+      nav_hide("mainPanel", "correlations")
+      nav_hide("mainPanel", "composite_plot")
+      nav_hide("mainPanel", "outlier")
+    } else {
+      nav_show("mainPanel", "correlations")
+      nav_show("mainPanel", "composite_plot")
+      nav_show("mainPanel", "outlier")
+    }
     req(n > 1L)
     d_s <- isolate(rd_score()) |>
       left_join(isolate(rd_edition()), join_by("edition_id"))
