@@ -615,7 +615,7 @@ ui <- page_navbar(
       fluidRow(
         style = "display: flex; align-items: flex-end;",
         column(
-          width = 3,
+          width = 4,
           textInput(
             "txtPerson",
             label = tooltip(
@@ -638,25 +638,25 @@ ui <- page_navbar(
           )
         ),
         column(
-          width = 3,
+          width = 4,
           dateInput(
             "dateBirthdate",
-            label = tagList(
-              "Birthdate (YYYY-MM-DD)",
-              tooltip(
+            label = tooltip(
+              span(
+                "Birthdate (YYYY-MM-DD)",
                 bs_icon(
                   "info-circle-fill",
                   class = "text-info"
-                ),
-                tagList(
-                  p(
-                    "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores."
-                  ),
-
-                  "Like all other information in this app, the",
-                  strong("Birthdate"),
-                  "is private because it stays locally on your machine. It is never sent to a third-party server."
                 )
+              ),
+              tagList(
+                p(
+                  "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores."
+                ),
+
+                "Like all other information in this app, the",
+                strong("Birthdate"),
+                "is private because it stays locally on your machine. It is never sent to a third-party server."
               )
             ),
             width = "100%",
@@ -664,37 +664,32 @@ ui <- page_navbar(
           )
         ),
         column(
-          width = 2,
+          width = 4,
           numericInput(
-            "defaultReliability",
-            "Default Reliability",
+            inputId = "defaultReliability",
+            label = tooltip(
+              span(
+                "Default Reliability",
+                bs_icon(
+                  "info-circle-fill",
+                  class = "text-info"
+                )
+              ),
+              "When a reliability coefficient for a test is unknown, this value is used as the default value."
+            ),
             min = 0,
             max = 1,
             step = 0.01,
-            value = 0.96
-          )
-        ),
-        column(
-          width = 4,
-          div(
-            style = "display: flex; gap: 10px; align-items: flex-end;",
-            id = "my_file_input_container",
-            downloadButton("dl", "Export", icon = NULL),
-            fileInput(
-              "loaddata",
-              label = NULL,
-              buttonLabel = "Import",
-              accept = ".xlsx",
-              placeholder = NULL
-            )
+            value = 0.96,
+            width = "100%"
           )
         )
       )
     ),
     fluidRow(
       column(
-        width = 3,
-        style = "display: flex; justify-content: flex-start; flex-direction: row; align-items: flex-end;",
+        width = 6,
+        style = "display: flex; justify-content: flex-start; flex-direction: row; align-items: flex-end; gap: 10px;",
         hidden(
           div(
             id = "hidden_add_score",
@@ -703,6 +698,30 @@ ui <- page_navbar(
               label = "Add Test Score",
               class = "btn-primary"
             )
+          )
+        ),
+        div(
+          id = "my_file_input_container",
+          tooltip(
+            fileInput(
+              "loaddata",
+              label = NULL,
+              buttonLabel = "Import",
+              accept = ".xlsx",
+              placeholder = NULL,
+            ),
+            "Previously exported files can be imported. Before importing, export any information you would like to save."
+          )
+        ),
+        div(
+          tooltip(
+            downloadButton(
+              "dl",
+              "Export",
+              icon = NULL,
+              class = "btn btn-secondary"
+            ),
+            "Exporting means saving all scores and other changes to an Excel file. The file will be saved to your browser's download folder. It is probably better to move the file to a more permanent location where it can be imported later."
           )
         )
       )
@@ -716,6 +735,14 @@ ui <- page_navbar(
     h4("Composite IQ", id = "hciq"),
     div(
       reactableOutput("grdIQ", height = "auto")
+    ),
+    p(
+      "Created by",
+      tags$a(
+        "W. Joel Schneider",
+        href = "https://wjschne.github.io/",
+        target = "_blank"
+      )
     )
   ),
   ## correlations ----
@@ -800,21 +827,23 @@ ui <- page_navbar(
       ),
       tags$div(
         style = "display: flex; gap: 10px;",
-        actionButton(
-          "add_edition",
-          label = "Add Edition",
-          class = "btn-primary",
-          width = "150px"
+        div(
+          actionButton(
+            "add_edition",
+            label = "Add Edition",
+            class = "btn-primary",
+            width = "175px"
+          )
         ),
-        tags$p(
-          "Edit list of available tests. Changes do not persist across sessions, but if you have suggestions for permanent additions, feel free to email me at ",
+        tags$span(
+          "This list refreshes to its defaults in each session. For persistent changes, use the Export and Import buttons on the Entry tab. If you have suggestions for permanent additions, feel free to email me at ",
           tags$a(
             href = "mailto:w.joel.schneider@gmail.com?subject=Composite%20IQ%20Calculator%20Suggestions",
             title = "Composite IQ Calculator Suggestions",
             "w.joel.schneider@gmail.com",
             .noWS = "outside"
           ),
-          ". For persistent changes, use the Export and Import buttons on the Data Entry tab."
+          "."
         )
       ),
       ## edition ----
@@ -1129,26 +1158,34 @@ server <- function(input, output, session) {
 
   # download ----
 
-  observeEvent(input$dl, {
-    showModal(modalDialog(
-      title = "File Exportr",
-      "File has been exported to your browser's download folder. For safekeeping, move the file to a folder you can remember when you want to import the data.",
-      easyClose = TRUE,
-      footer = modalButton("Dismiss")
-    ))
-  })
-
   output$dl <- downloadHandler(
     filename = function() {
       fn <- paste0("composite_iq_", ymd(Sys.Date()), ".xlsx")
       if (isTruthy(input$txtPerson)) {
         fn <- paste0(input$txtPerson, "_", fn)
       }
+      showModal(modalDialog(
+        title = "File Export",
+        paste0(
+          "A file (",
+          fn,
+          ") has been exported to your browser's download folder. For safekeeping, move the file to a folder you can remember when you want to import the data."
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Dismiss")
+      ))
       fn
     },
     content = function(file) {
+      if (is.null(rd_iq())) {
+        d_ciq <- tibble(CIQ = numeric(0))
+      } else {
+        d_ciq <- rd_iq() |>
+          select(-data)
+      }
+
       d_list <- list(
-        `Composite IQ` = rd_iq() %>% select(-data),
+        `Composite IQ` = d_ciq,
         Person = tibble(
           Person = input$txtPerson,
           Birthdate = input$dateBirthdate,
@@ -1224,11 +1261,15 @@ server <- function(input, output, session) {
           rd_score(mutate(dd, Date = as.Date(ymd(Date))))
         }
         if (s == "Correlation") {
-          r_cor(
-            dd %>%
-              column_to_rownames("rowid") %>%
-              as.matrix()
-          )
+          if (nrow(dd) > 0L) {
+            r_cor(
+              dd %>%
+                column_to_rownames("rowid") %>%
+                as.matrix()
+            )
+          } else {
+            r_cor(dd)
+          }
         }
 
         if (s == "Person") {

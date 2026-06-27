@@ -1,3 +1,3 @@
-This a free online web app that calculates composite IQ from multiple IQ test administrations. 
+This a free online web app that calculates composite IQ from multiple IQ test administrations. Click [here](https://wjschne.github.io/compositeiq/) to load the app. Be patient---it often takes 10 to 30 seconds to load.
 
-This app is still in a preliminary state of development and has not yet been fully vetted. 
+

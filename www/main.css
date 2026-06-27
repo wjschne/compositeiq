@@ -8,6 +8,7 @@
   src: url('fonts/RobotoCondensed-Bold.ttf') format('truetype');
   font-weight: 700;
 }
+
 @font-face {
   font-family: 'Roboto Condensed';
   src: url('fonts/RobotoCondensed-Italic.ttf') format('truetype');
@@ -16,30 +17,36 @@
 }
 
 
-#my_file_input_container {
-        height: 32.75px;
-      }
 
 #my_file_input_container .form-control {
-        height: 32.75px;
         color: transparent;
         width:0;
         border:none;
         display: none;
       }
-#my_file_input_container .btn-file {
-        height: 32.75px;
-        padding-top: 5px;
+
+#my_file_input_container .form-group {
+        margin-bottom: 0;
       }
 
- #my_file_input_container .form-group {
-        height: 32.75px;
-      }
+
+#my_file_input_container .shiny-input-container:not(.shiny-input-container-inline) {
+  width: 100px;
+}
+
+#my_file_input_container .input-group-prepend span {
+  background-color: #D4E0E8;
+  color: black;
+}
+
+#loaddata_progress { display: none; }
 
 
 #dl {
-  margin-bottom: 16px !important;
-  height: 32:75px !important;
+  margin-bottom: 0px !important;
+  height: 42.75px !important;
+  padding-top: 11.25px !important;
+  padding-bottom: 11.25px !important;
 }
 
 .tui-grid-container {
