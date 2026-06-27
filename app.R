@@ -2163,15 +2163,6 @@ server <- function(input, output, session) {
       select(Family, family_id) |>
       deframe()
 
-    # if (length(c_family) > 0L) {
-    #   c_family_i <- c_family[names(c_family) == "Wechsler"]
-    #   if (length(c_family_i) == 0L) {
-    #     c_family_i <- c_family[1]
-    #   }
-    # } else {
-    #   c_family_i <- NULL
-    # }
-
     c_battery <- rd_battery() |>
       select(Battery, battery_id) |>
       deframe()
@@ -3180,7 +3171,7 @@ server <- function(input, output, session) {
   })
   ## testplot ----
 
-  output$ciq <- renderPlot(height = 800, {
+  output$ciq <- renderPlot(height = 700, {
     req(input$dateBirthdate)
     req(input$mainPanel == "composite_plot")
     req(input$defaultReliability)
@@ -3223,7 +3214,7 @@ server <- function(input, output, session) {
     ggplot(d_iq, aes(x = score, xdist = dist_normal(est_true, SEE))) +
       stat_slab(
         data = tibble(score = 100, est_true = 100, SEE = 15),
-        aes(fill = after_stat(level)),
+        mapping = aes(fill = after_stat(level)),
         p_limits = c(0.000001, .999999),
         .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - .5),
         height = .925
@@ -3253,7 +3244,7 @@ server <- function(input, output, session) {
       geom_text(
         y = 0.2,
         color = fg,
-        lineheight = .8,
+        lineheight = .95,
         aes(label = paste0("CIQ\n", round(score))),
         size = 24,
         size.unit = "pt",
@@ -3267,7 +3258,7 @@ server <- function(input, output, session) {
         aes(label = paste0(Edition, "\n", round(score)), y = 0),
         size = 20 / .pt,
         family = "Roboto Condensed",
-        lineheight = .8,
+        lineheight = .95,
         vjust = -.5,
         force_pull = 0,
         color = fg,
