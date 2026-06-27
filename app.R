@@ -2049,7 +2049,8 @@ server <- function(input, output, session) {
             ))
           }
         )
-      )
+      ) |>
+      arrange("Date")
 
     corrected_width <- 2L + 1L * any(round(current_data$Corrected, 0) >= 100)
     score_width <- 2L + 1L * any(round(current_data$Score, 0) >= 100)
@@ -2162,12 +2163,24 @@ server <- function(input, output, session) {
       select(Family, family_id) |>
       deframe()
 
+    # if (length(c_family) > 0L) {
+    #   c_family_i <- c_family[names(c_family) == "Wechsler"]
+    #   if (length(c_family_i) == 0L) {
+    #     c_family_i <- c_family[1]
+    #   }
+    # } else {
+    #   c_family_i <- NULL
+    # }
+
     c_battery <- rd_battery() |>
       select(Battery, battery_id) |>
       deframe()
 
     iv_score$disable()
     iv_score$enable()
+    # updateSelectInput(inputId = "score_family_new", selected = NA)
+    # updateSelectInput(inputId = "score_battery_new", selected = NA)
+    # updateSelectInput(inputId = "score_edition_new", selected = NA)
 
     showModal(
       modalDialog(
@@ -2181,7 +2194,7 @@ server <- function(input, output, session) {
               "Select Family",
               width = "100%",
               choices = c_family,
-              selected = c_family[names(c_family) == "Wechsler"],
+              # selected = c_family_i,
               multiple = FALSE,
               selectize = FALSE,
               size = length(c_family)
@@ -3221,7 +3234,7 @@ server <- function(input, output, session) {
         color = fg,
         alpha = .6
       ) +
-      stat_slabinterval(
+      geom_slabinterval(
         data = d_s,
         show_point = FALSE,
         p_limits = c(0.000001, .999999),
@@ -3229,7 +3242,7 @@ server <- function(input, output, session) {
         fill = scales::alpha(fg, .2),
         color = fg
       ) +
-      stat_slabinterval(
+      geom_slabinterval(
         show_point = FALSE,
         p_limits = c(0.000001, .999999),
         y = .2,
