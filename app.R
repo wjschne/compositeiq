@@ -758,6 +758,19 @@ ui <- page_navbar(
         href = "https://wjschne.github.io/",
         target = "_blank"
       )
+    ),
+    p(
+      "A full discussion on why, how, and when to make a composite IQ, see Schneider, W. J., Reynolds, C. R., McGrew, K. S., & Salekin, K. L. (2026).",
+      a(
+        "Life-and-death psychometrics: Generalizable best methods for combining scores in intellectual disability and other diagnostic assessments",
+        href = "https://doi.org/10.1037/jpn0000032",
+        .noWS = "after"
+      ),
+      ".",
+      em("Journal of Pediatric Neuropsychology, 12", .noWS = "after"),
+      "(2), 47",
+      HTML("&ndash;", .noWS = "outside"),
+      "67."
     )
   ),
   ## correlations ----
