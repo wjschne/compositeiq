@@ -16,6 +16,12 @@
   font-style: italic;
 }
 
+.right-aligned-div {
+  width: 200px; /* Requires a defined width */
+  margin-left: auto;
+  margin-right: 0;
+}
+
 
 
 #my_file_input_container .form-control {

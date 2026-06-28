@@ -1,3 +1,5 @@
+options(shiny.useragg = TRUE)
+
 # Workaround for Chromium browser download bug in Shinylive
 downloadButton <- function(...) {
   tag <- shiny::downloadButton(...)
@@ -5,6 +7,14 @@ downloadButton <- function(...) {
   tag
 }
 
+systemfonts::register_font(
+  name = "rbc",
+  plain = "www/fonts/RobotoCondensed-Regular.ttf",
+  bold = "www/fonts/RobotoCondensed-Bold.ttf",
+  italic = "www/fonts/RobotoCondensed-Italic.ttf",
+  bolditalic = "www/fonts/RobotoCondensed-BoldItalic.ttf"
+)
+systemfonts::get_from_google_fonts("Roboto Condensed")
 
 # packages ----
 
@@ -51,16 +61,21 @@ library(writexl)
 library(readxl)
 library(tinter)
 library(ggnormalviolin)
-library(showtext)
-library(sysfonts)
+# library(thematic)
+library(ragg)
 
-font_add(
-  "Roboto Condensed",
-  regular = "www/fonts/RobotoCondensed-Regular.ttf",
-  bold = "www/fonts/RobotoCondensed-Bold.ttf",
-  italic = "www/fonts/RobotoCondensed-Italic.ttf"
-)
-showtext_auto()
+
+# thematic_shiny(font = "auto")
+# library(showtext)
+# library(sysfonts)
+
+# font_add(
+#   "Roboto Condensed",
+#   regular = "www/fonts/RobotoCondensed-Regular.ttf",
+#   bold = "www/fonts/RobotoCondensed-Bold.ttf",
+#   italic = "www/fonts/RobotoCondensed-Italic.ttf"
+# )
+# showtext_auto()
 
 # constants ####
 my_primary <- "#1f6187"
@@ -708,7 +723,7 @@ ui <- page_navbar(
               label = NULL,
               buttonLabel = "Import",
               accept = ".xlsx",
-              placeholder = NULL,
+              placeholder = NULL
             ),
             "Previously exported files can be imported. Before importing, export any information you would like to save."
           )
@@ -788,9 +803,24 @@ ui <- page_navbar(
     div(
       style = "display: flex; gap: 10px;",
       "Original Scores",
-      input_switch("toggle_correct_plot", label = "Corrected Scores", TRUE)
+      input_switch("toggle_correct_plot", label = "Corrected Scores", TRUE),
+      div(
+        class = "right-aligned-div",
+        tooltip(
+          span(
+            "About This Plot",
+            bs_icon(
+              "info-circle-fill",
+              class = "text-info"
+            )
+          ),
+          "The large, brightly colored normal distribution in the center of the plot is the population distribution of IQ, with a mean of 100 and a standard deviation of 15. The individual IQ scores are along the bottom, and the composite IQ is one row above. Each IQ has a point showing the score, a thick line showing the 68% confidence interval, a thin line showing 95% confidence interval, and a normal distribution showing the likely distribution of true scores conditioned on the observed score. The confidence intervals and conditional distributions are not centered on the observed score because the estimated true score regresses to the population mean. The type of confidence intervals used here are equivalent to Bayesian credible intervals."
+        )
+      )
     ),
-    plotOutput("ciq")
+    div(
+      plotOutput("ciq", height = 600)
+    )
   ),
   ## outlier ----
   nav_panel(
@@ -799,12 +829,31 @@ ui <- page_navbar(
     div(
       style = "display: flex; gap: 10px;",
       "Original Scores",
-      input_switch("toggle_correct", label = "Corrected Scores", TRUE)
+      input_switch("toggle_correct", label = "Corrected Scores", TRUE),
+      div(
+        class = "right-aligned-div",
+        tooltip(
+          span(
+            "About This Plot",
+            bs_icon(
+              "info-circle-fill",
+              class = "text-info"
+            )
+          ),
+          span(
+            "Each IQ has a population distribution on the left with a mean of 100 and standard deviation of 15. The individual IQs have a conditional normal distribution on the right. These are not confidence intervals. They are the distributions conditioned on composite IQ. That is, they show the likely distributions of the individual IQs given the composite IQ. When the conditional proportion is very high or very low, the observed IQ is outside its usual range. The profile unusualness statistic tells how unusual the profile is after controlling for the composite IQ. The statistic is a conditional Mahalanobis distance, which has a chi square distribution with ",
+            em("k"),
+            " &minus; 1 degrees of freedom. The proportion (",
+            em("p", .noWS = "outside"),
+            ") associated with the conditional Mahalanobis distance tells how unusual the profile is compared to all other profiles with the same composite IQ."
+          )
+        )
+      )
     ),
     div(
       reactableOutput("grdOutlier", height = "auto")
     ),
-    plotOutput("plot_cm", height = 800, weighted.mean(800))
+    plotOutput("plot_cm", height = 600, width = 600L)
   ),
   ## family ----
   nav_panel(
@@ -1509,6 +1558,8 @@ server <- function(input, output, session) {
           family_id == rfamily_id()
         )
     }
+
+    req(length(unique(current_data$family_id)) < 2L)
 
     current_data$Actions <- pmap_chr(
       tibble(
@@ -3169,9 +3220,10 @@ server <- function(input, output, session) {
       )
     )
   })
+
   ## testplot ----
 
-  output$ciq <- renderPlot(height = 700, {
+  output$ciq <- renderPlot({
     req(input$dateBirthdate)
     req(input$mainPanel == "composite_plot")
     req(input$defaultReliability)
@@ -3211,76 +3263,87 @@ server <- function(input, output, session) {
       slice(ifelse(input$toggle_correct_plot, 2L, 1L)) %>%
       rename(score = SS)
 
-    ggplot(d_iq, aes(x = score, xdist = dist_normal(est_true, SEE))) +
-      stat_slab(
-        data = tibble(score = 100, est_true = 100, SEE = 15),
-        mapping = aes(fill = after_stat(level)),
-        p_limits = c(0.000001, .999999),
-        .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - .5),
-        height = .925
-      ) +
-      geom_vline(
-        xintercept = seq(40, 160, 5),
-        linewidth = .25,
-        color = fg,
-        alpha = .6
-      ) +
-      geom_slabinterval(
-        data = d_s,
-        show_point = FALSE,
-        p_limits = c(0.000001, .999999),
-        height = .15,
-        fill = scales::alpha(fg, .2),
-        color = fg
-      ) +
-      geom_slabinterval(
-        show_point = FALSE,
-        p_limits = c(0.000001, .999999),
-        y = .2,
-        height = .2,
-        fill = scales::alpha(fg, .35),
-        color = fg
-      ) +
-      geom_text(
-        y = 0.2,
-        color = fg,
-        lineheight = .95,
-        aes(label = paste0("CIQ\n", round(score))),
-        size = 24,
-        size.unit = "pt",
-        vjust = -.2,
-        family = "Roboto Condensed",
-      ) +
-      geom_point(y = 0.2, size = 3, color = fg) +
-      geom_point(data = d_s, y = 0, size = 3, color = fg) +
-      ggrepel::geom_text_repel(
-        data = d_s,
-        aes(label = paste0(Edition, "\n", round(score)), y = 0),
-        size = 20 / .pt,
-        family = "Roboto Condensed",
-        lineheight = .95,
-        vjust = -.5,
-        force_pull = 0,
-        color = fg,
-        nudge_y = .02,
-        min.segment.length = 0
-      ) +
-      scale_fill_viridis_d(end = .9, begin = 0, alpha = .5) +
-      theme_minimal(base_family = "Roboto Condensed", base_size = 20) +
-      theme(
-        legend.position = "none",
-        panel.grid = element_blank(),
-        plot.background = element_rect(bg, color = NA),
-        axis.text.x = element_text(color = fg)
-      ) +
-      scale_x_continuous(
-        NULL,
-        limits = c(40, 160),
-        breaks = seq(40, 160, 15),
-        minor_breaks = seq(40, 160, 5)
-      ) +
-      scale_y_continuous(NULL, breaks = NULL, expand = expansion()) +
-      coord_cartesian(xlim = c(40, 160), clip = FALSE)
+    suppressWarnings(
+      ggplot(d_iq, aes(x = score)) +
+        stat_slab(
+          data = tibble(score = 100, est_true = 100, SEE = 15),
+          mapping = aes(
+            fill = after_stat(level),
+            xdist = dist_normal(est_true, SEE)
+          ),
+          p_limits = c(0.000001, .999999),
+          .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - .5),
+          height = .925
+        ) +
+        geom_vline(
+          xintercept = seq(40, 160, 5),
+          linewidth = .25,
+          color = fg,
+          alpha = .6
+        ) +
+        stat_slabinterval(
+          aes(xdist = dist_normal(est_true, SEE)),
+          data = d_s,
+          show_point = FALSE,
+          p_limits = c(0.000001, .999999),
+          height = .15,
+          slab_fill = fg,
+          slab_alpha = .2,
+          interval_color = fg,
+          color = fg
+        ) +
+        stat_slabinterval(
+          aes(xdist = dist_normal(est_true, SEE)),
+          show_point = FALSE,
+          p_limits = c(0.000001, .999999),
+          y = .2,
+          height = .2,
+          slab_fill = fg,
+          interval_color = fg,
+          slab_alpha = .3,
+          color = fg
+        ) +
+        geom_text(
+          y = 0.2,
+          color = fg,
+          lineheight = .85,
+          aes(label = paste0("Composite IQ\n", round(score))),
+          size = 24,
+          size.unit = "pt",
+          vjust = -.2,
+          family = "Roboto Condensed",
+        ) +
+        geom_point(y = 0.2, size = 3, color = fg) +
+        geom_point(data = d_s, y = 0, size = 3, color = fg) +
+        ggrepel::geom_text_repel(
+          data = d_s,
+          aes(label = paste0(Edition, "\n", round(score)), y = 0),
+          size = 20 / .pt,
+          family = "Roboto Condensed",
+          lineheight = .85,
+          vjust = -.5,
+          force_pull = 0,
+          color = fg,
+          nudge_y = .02,
+          min.segment.length = 0
+        ) +
+        scale_fill_viridis_d(end = .9, begin = 0, alpha = .5) +
+        theme_minimal(base_family = "Roboto Condensed", base_size = 20) +
+        theme(
+          legend.position = "none",
+          panel.grid = element_blank(),
+          plot.background = element_rect(bg, color = NA),
+          axis.text.x = element_text(color = fg, size = 20)
+        ) +
+        scale_x_continuous(
+          NULL,
+          limits = c(40, 160),
+          breaks = seq(40, 160, 15),
+          minor_breaks = seq(40, 160, 5)
+        ) +
+        scale_y_continuous(NULL, breaks = NULL, expand = expansion()) +
+        coord_cartesian(xlim = c(40, 160), clip = FALSE)
+    )
   })
 
   # outlier ----
