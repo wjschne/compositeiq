@@ -7,14 +7,9 @@ downloadButton <- function(...) {
   tag
 }
 
-systemfonts::register_font(
-  name = "rbc",
-  plain = "www/fonts/RobotoCondensed-Regular.ttf",
-  bold = "www/fonts/RobotoCondensed-Bold.ttf",
-  italic = "www/fonts/RobotoCondensed-Italic.ttf",
-  bolditalic = "www/fonts/RobotoCondensed-BoldItalic.ttf"
-)
-systemfonts::get_from_google_fonts("Roboto Condensed")
+myfont <- "Roboto Condensed"
+
+systemfonts::get_from_google_fonts(myfont)
 
 # packages ----
 
@@ -70,7 +65,7 @@ library(ragg)
 # library(sysfonts)
 
 # font_add(
-#   "Roboto Condensed",
+#   myfont,
 #   regular = "www/fonts/RobotoCondensed-Regular.ttf",
 #   bold = "www/fonts/RobotoCondensed-Bold.ttf",
 #   italic = "www/fonts/RobotoCondensed-Italic.ttf"
@@ -99,7 +94,7 @@ cm_plot <- function(
   x,
   ...,
   p_tail = .05,
-  family = "Roboto Condensed",
+  family = myfont,
   score_digits = ifelse(min(x$sigma) >= 10, 0, 2)
 ) {
   if (length(unique(x$d_score$id)) > 1) {
@@ -594,7 +589,7 @@ ui <- page_navbar(
       useShinyjs(),
       useKeys(),
       keysInput("enter_key", "enter", global = TRUE),
-      use_googlefont("Roboto Condensed"),
+      use_googlefont(myfont),
       tags$style(HTML(
         "
       .rt-tr-striped {--var(theme-lightblue)}
@@ -1086,10 +1081,11 @@ server <- function(input, output, session) {
   })
   iv_score_edit$add_rule(
     "date_new",
-    sv_gt(
-      isolate(input$dateBirthdate),
-      "Date is before the person's birthdate."
-    )
+    function(value) {
+      if (input$dateBirthdate > value) {
+        "Date is before the person's birthdate."
+      }
+    }
   )
   iv_score$add_validator(iv_score_edit)
 
@@ -3323,7 +3319,7 @@ server <- function(input, output, session) {
           size = 24,
           size.unit = "pt",
           vjust = -.2,
-          family = "Roboto Condensed",
+          family = myfont,
         ) +
         geom_point(y = 0.2, size = 3, color = fg) +
         geom_point(data = d_s, y = 0, size = 3, color = fg) +
@@ -3331,7 +3327,7 @@ server <- function(input, output, session) {
           data = d_s,
           aes(label = paste0(Edition, "\n", round(score)), y = 0),
           size = 20 / .pt,
-          family = "Roboto Condensed",
+          family = myfont,
           lineheight = .85,
           vjust = -.5,
           force_pull = 0,
@@ -3340,7 +3336,7 @@ server <- function(input, output, session) {
           min.segment.length = 0
         ) +
         scale_fill_viridis_d(end = .9, begin = 0, alpha = .5) +
-        theme_minimal(base_family = "Roboto Condensed", base_size = 20) +
+        theme_minimal(base_family = myfont, base_size = 20) +
         theme(
           legend.position = "none",
           panel.grid = element_blank(),
@@ -3402,7 +3398,7 @@ server <- function(input, output, session) {
     )
 
     output$plot_cm <- renderPlot(
-      cm_plot(cm, family = "Roboto Condensed"),
+      cm_plot(cm, family = myfont),
       height = 700,
       width = 700 + 100 * n
     )
