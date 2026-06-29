@@ -674,8 +674,7 @@ ui <- page_navbar(
                 "is private because it stays locally on your machine. It is never sent to a third-party server."
               )
             ),
-            width = "100%",
-            value = as.Date("2015-04-15")
+            width = "100%"
           )
         ),
         column(
