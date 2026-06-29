@@ -1,0 +1,41 @@
+Package: compositeiq
+Title: Composite IQ Calculator
+Version: 0.1.0
+Authors@R: 
+    person("W. Joel", "Schneider", , "w.joel.schneider@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8393-5316"))
+Description: Calculates a compsite IQ from multiple IQ test administrations.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
+Imports: 
+    brand.yml,
+    bsicons,
+    bslib,
+    conflicted,
+    curl,
+    dplyr,
+    fresh,
+    ggdist,
+    ggnormalviolin,
+    ggplot2,
+    ggtext,
+    htmltools,
+    keys,
+    lubridate,
+    purrr,
+    ragg,
+    reactable,
+    readr,
+    readxl,
+    scales,
+    shiny,
+    shinyjs,
+    shinyvalidate,
+    stringr,
+    tibble,
+    tidyr,
+    tinter,
+    unusualprofile,
+    writexl
