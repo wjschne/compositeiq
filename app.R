@@ -651,6 +651,7 @@ ui <- page_navbar(
           width = 4,
           dateInput(
             "dateBirthdate",
+            value = NA,
             label = tooltip(
               span(
                 "Birthdate (YYYY-MM-DD)",
