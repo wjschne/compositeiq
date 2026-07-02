@@ -16,6 +16,8 @@
   font-style: italic;
 }
 
+hr {margin-top: 10px; margin-bottom: 0}
+
 .right-aligned-div {
   width: 200px; /* Requires a defined width */
   margin-left: auto;
