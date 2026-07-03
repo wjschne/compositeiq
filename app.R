@@ -9,28 +9,16 @@ downloadButton <- function(...) {
 
 myfont <- "Roboto Condensed"
 
-systemfonts::get_from_google_fonts(myfont)
+systemfonts::add_fonts(
+  list.files("www/fonts", pattern = "\\.ttf$", full.names = TRUE)
+)
 
 # packages ----
-
-options(warn = 1)
-# library(conflicted)
-# conflicts_prefer(
-#   dplyr::filter,
-#   dplyr::lag,
-#   dplyr::intersect,
-#   dplyr::setdiff,
-#   dplyr::setequal,
-#   dplyr::union,
-#   shinyjs::show,
-#   .quiet = TRUE
-# )
 
 library(shiny)
 library(bsicons)
 library(reactable)
 library(shinyjs)
-library(keys)
 library(dplyr)
 library(stringr)
 library(tibble)
@@ -43,50 +31,31 @@ library(htmltools)
 library(purrr)
 library(shinyvalidate)
 library(tidyr)
-# library(curl)
 library(fresh)
 library(unusualprofile)
 library(ggplot2)
 library(ggtext)
-library(scales)
 library(distributional)
 library(ggdist)
 library(writexl)
 library(readxl)
-library(tinter)
 library(ggnormalviolin)
 library(ragg)
 
-
-# thematic_shiny(font = "auto")
-# library(showtext)
-# library(sysfonts)
-
-# font_add(
-#   myfont,
-#   regular = "www/fonts/RobotoCondensed-Regular.ttf",
-#   bold = "www/fonts/RobotoCondensed-Bold.ttf",
-#   italic = "www/fonts/RobotoCondensed-Italic.ttf"
-# )
-# showtext_auto()
-
 # constants ####
 my_primary <- "#1f6187"
-my_primary_medium <- lighten(my_primary, 0.5)
-my_primary_light <- lighten(my_primary, 0.18)
-my_primary_lightest <- lighten(my_primary, 0.08)
-my_primary_dark <- darken(my_primary, 0.7)
-my_primary_darkest <- darken(my_primary, 0.9)
+# my_primary_medium <- lighten(my_primary, 0.5)
+# my_primary_light <- lighten(my_primary, 0.18)
+# my_primary_lightest <- lighten(my_primary, 0.08)
+# my_primary_dark <- darken(my_primary, 0.7)
+# my_primary_darkest <- darken(my_primary, 0.9)
+my_primary_medium <- "#91B1C4"
+my_primary_light <- "#D8E4EA"
+my_primary_lightest <- "#EFF3F6"
+my_primary_dark <- "#091E29"
+my_primary_darkest <- "#030A0E"
 
 # helper functions ----
-
-new_counter <- function(start = 0L) {
-  i <- start
-  function() {
-    i <<- i + 1L
-    i
-  }
-}
 
 cm_plot <- function(
   x,
@@ -264,10 +233,10 @@ composite_score <- function(
     sigma_x <- rep(sigma_x, k)
   }
   if (length(sigma_x) != length(x)) {
-    stop("x and mu_x must be the same length.")
+    stop("x and sigma_x must be the same length.")
   }
   if ((nrow(R) != k) || (ncol(R) != k) || !is.matrix(R)) {
-    stop("R must a square matrix with the same size as x.")
+    stop("R must be a square matrix with the same size as x.")
   }
   if (length(mu_composite) != 1) {
     stop("mu_composite must be a vector of length 1.")
@@ -279,7 +248,7 @@ composite_score <- function(
     w <- rep(1, length(x))
   }
   if (length(w) != length(x)) {
-    stop("w must the the same length as x.")
+    stop("w must be the same length as x.")
   }
 
   sigma_composite *
@@ -571,10 +540,16 @@ make_cm <- function(r, d_current, d_iq, toggle = 1) {
     mutate(switcher = toggle) |>
     mutate(Score = if_else(switcher, Corrected, Score)) |>
     dplyr::select(Edition, Date, Score, Weight, SD, Mean) |>
-    arrange(Date)
+    arrange(Date, Edition) |>
+    mutate(n = n(), .by = Edition) |>
+    mutate(Edition = ifelse(n > 1L, paste0(Edition, " ", Date), Edition)) |>
+    dplyr::select(-n)
 
   d_iq <- tibble(
-    name = factor(c("CIQ", d_s$Edition), levels = c("CIQ", d_s$Edition)),
+    name = factor(
+      c("CIQ", d_s$Edition),
+      levels = unique(c("CIQ", d_s$Edition))
+    ),
     value = c(d_iq$SS[toggle * 1 + 1], d_s$Score)
   ) |>
     pivot_wider()
@@ -602,6 +577,9 @@ make_cm <- function(r, d_current, d_iq, toggle = 1) {
 }
 
 make_outlier_table <- function(cm, d_iq, d_current, toggle, n) {
+  d_current <- d_current %>%
+    arrange(Date, Edition)
+
   cm$d_score[seq(1, n), ] |>
     mutate(Date = d_current$Date, .before = 1L) |>
     mutate(Edition = d_current$Edition, .before = 1L) |>
@@ -723,12 +701,11 @@ ui <- page_navbar(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "main.css"),
       useShinyjs(),
-      useKeys(),
-      keysInput("enter_key", "enter", global = TRUE),
+      # useKeys(),
+      # keysInput("enter_key", "enter", global = TRUE),
       fresh::use_googlefont(myfont),
       tags$style(HTML(
         "
-      .rt-tr-striped {--var(theme-lightblue)}
       .corinput {
         background-color: var(--bs-primary) !important;
         color: var(--bs-light) !important;
@@ -785,29 +762,31 @@ ui <- page_navbar(
         ),
         column(
           width = 4,
-          dateInput(
-            "dateBirthdate",
-            value = NA,
-            # value = "2000-10-10",
-            label = tooltip(
-              span(
-                "Birthdate (YYYY-MM-DD)",
-                bs_icon(
-                  "info-circle-fill",
-                  class = "text-info"
+          suppressWarnings(
+            dateInput(
+              "dateBirthdate",
+              value = NA,
+              # value = "2000-10-10",
+              label = tooltip(
+                span(
+                  "Birthdate (YYYY-MM-DD)",
+                  bs_icon(
+                    "info-circle-fill",
+                    class = "text-info"
+                  )
+                ),
+                tagList(
+                  p(
+                    "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores."
+                  ),
+
+                  "Like all other information in this app, the",
+                  strong("Birthdate"),
+                  "is private because it stays locally on your machine. It is never sent to a third-party server."
                 )
               ),
-              tagList(
-                p(
-                  "This information is used to calculate the person's age at the time of testing, which is then use to estimate the correlations among the test scores."
-                ),
-
-                "Like all other information in this app, the",
-                strong("Birthdate"),
-                "is private because it stays locally on your machine. It is never sent to a third-party server."
-              )
-            ),
-            width = "100%"
+              width = "100%"
+            )
           )
         ),
         column(
@@ -927,7 +906,7 @@ ui <- page_navbar(
     "Correlations",
     value = "correlations",
     p(
-      "Estimated correlations can be overridden by changing values in the lower half of the matrix."
+      "Estimated correlations can be overridden by changing values in the lower half of the matrix. In general, make adjustments after all your scores have been entered. New scores and changing the birthdate can update the estimates silently."
     ),
     fluidRow(column(
       12,
@@ -1317,19 +1296,6 @@ server <- function(input, output, session) {
       pull(flynn_id)
   })
 
-  # counters ----
-  if (nrow(d_edition) > 0) {
-    edition_id_counter <- new_counter(max(d_edition$edition_id))
-  } else {
-    edition_id_counter <- new_counter()
-  }
-
-  if (nrow(d_score) > 0) {
-    score_id_counter <- new_counter(max(d_score$score_id))
-  } else {
-    score_id_counter <- new_counter()
-  }
-
   # functions ----
   flynn_correction <- function(
     score,
@@ -1472,6 +1438,7 @@ server <- function(input, output, session) {
         if (s == "Score") {
           rd_score(mutate(dd, Date = as.Date(ymd(Date))))
         }
+
         if (s == "Correlation") {
           if (nrow(dd) > 0L) {
             r_cor(
@@ -1801,11 +1768,6 @@ server <- function(input, output, session) {
       f_selected <- as.character(rfamily_id())
     }
 
-    if (isTruthy(input$edition_click$row)) {
-      dr <- input$grdEdition_data[input$edition_click$row, ]
-      b_selected <- as.character(dr$battery_id)
-      f_selected <- as.character(dr$family_id)
-    }
     showModal(
       modalDialog(
         title = "Add New Test",
@@ -1988,7 +1950,7 @@ server <- function(input, output, session) {
       d_e <- isolate(rd_edition())
       fid <- add_new_family(input$family_new)
       bid <- add_new_battery(input$battery_new, fid)
-      eid <- edition_id_counter()
+      eid <- new_id(rd_edition(), "edition_id")
 
       d_e_new <- rows_insert(
         d_e,
@@ -2178,12 +2140,6 @@ server <- function(input, output, session) {
 
     removeModal()
   })
-
-  rd_edition_display <- reactiveVal(
-    isolate(rd_edition()) |>
-      left_join(isolate(rd_battery()), join_by(battery_id, family_id)) |>
-      mutate(Edition = paste0(Battery, " (", Edition, ")"))
-  )
 
   ## score ----
   output$grdScore <- renderReactable({
@@ -2483,6 +2439,8 @@ server <- function(input, output, session) {
       dplyr::filter(family_id == input$score_family_new) |>
       pull(Family)
 
+    req(length(family_name) > 0)
+
     if (input$score_family_new == "NA") {
       c_battery <- rd_battery() |>
         dplyr::select(Battery, battery_id) |>
@@ -2577,17 +2535,16 @@ server <- function(input, output, session) {
   #### add score submit ----
   observeEvent(input$add_score_submit, {
     if (iv_score$is_valid()) {
-      new_score_id <- score_id_counter()
+      new_score_id <- new_id(rd_score(), "score_id")
 
-      f_id <-
-        d_new <- tibble(
-          edition_id = as.integer(input$score_edition_new),
-          Score = input$score_new,
-          Date = input$date_new,
-          Weight = input$weight_new,
-          flynn_id = as.integer(input$score_flynn_new),
-          score_id = new_score_id
-        )
+      d_new <- tibble(
+        edition_id = as.integer(input$score_edition_new),
+        Score = input$score_new,
+        Date = input$date_new,
+        Weight = input$weight_new,
+        flynn_id = as.integer(input$score_flynn_new),
+        score_id = new_score_id
+      )
 
       rd_score(
         isolate(rd_score()) |>
@@ -3222,7 +3179,7 @@ server <- function(input, output, session) {
                     label = NULL, # Remove standard label for dense grid
                     value = signs::signs(
                       m_r[r, c],
-                      accuracy = 0.011,
+                      accuracy = 0.01,
                       trim_leading_zeros = TRUE
                     ),
                     max = 1,
@@ -3306,8 +3263,6 @@ server <- function(input, output, session) {
     shinyjs::show("hciq")
 
     m_r <- r_cor()
-    iq_var <- sum(r_cor())
-    iq_sd <- sqrt(iq_var)
     d_s <- rd_current() |>
       rename(Original = Score) |>
       mutate(id = row_number()) |>
@@ -3343,7 +3298,7 @@ server <- function(input, output, session) {
         SEE = 15 * sqrt(rxx - rxx^2),
         est_true = rxx * (SS - 100) + 100,
         UB = qnorm(0.975) * SEE + est_true,
-        LB = qnorm(0.0255) * SEE + est_true,
+        LB = qnorm(0.025) * SEE + est_true,
         CI = paste0(scales::number(LB, 1), "&ndash;", scales::number(UB, 1)),
         Percentile = as.character(
           as.numeric(
@@ -3760,7 +3715,7 @@ server <- function(input, output, session) {
           style = "heading 1"
         ) |>
         body_add_par(
-          "Table 3",
+          "Table 4",
           style = "table title"
         ) |>
         body_add_par(
@@ -3773,7 +3728,7 @@ server <- function(input, output, session) {
           alignment = c("l", rep("c", 5))
         ) |>
         body_add_par(
-          "Figure 3",
+          "Figure 4",
           style = "table title"
         ) |>
         body_add_par(
