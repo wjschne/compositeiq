@@ -72,11 +72,11 @@ library(ragg)
 
 # constants ####
 my_primary <- "#1f6187"
-my_primary_medium <- lighten(my_primary, .5)
-my_primary_light <- lighten(my_primary, .18)
-my_primary_lightest <- lighten(my_primary, .08)
-my_primary_dark <- darken(my_primary, .7)
-my_primary_darkest <- darken(my_primary, .9)
+my_primary_medium <- lighten(my_primary, 0.5)
+my_primary_light <- lighten(my_primary, 0.18)
+my_primary_lightest <- lighten(my_primary, 0.08)
+my_primary_dark <- darken(my_primary, 0.7)
+my_primary_darkest <- darken(my_primary, 0.9)
 
 # helper functions ----
 
@@ -92,7 +92,7 @@ cm_plot <- function(
   x,
   ...,
   font_size = 24,
-  p_tail = .05,
+  p_tail = 0.05,
   family = myfont,
   score_digits = ifelse(min(x$sigma) >= 10, 0, 2)
 ) {
@@ -172,7 +172,7 @@ cm_plot <- function(
       p_tail = p_tail,
       tail_alpha = 0.15,
       width = 0.85,
-      alpha = .6
+      alpha = 0.6
     ) +
     geom_normalviolin(
       mapping = aes(
@@ -185,7 +185,7 @@ cm_plot <- function(
       tail_alpha = 0.1,
       width = 0.85,
       p_tail = p_tail,
-      alpha = .3
+      alpha = 0.3
     ) +
     geom_point(mapping = aes(color = id)) +
     geom_richtext(
@@ -199,7 +199,7 @@ cm_plot <- function(
       label.padding = margin(),
       label.margin = margin(r = 4, unit = "pt"),
       fill = NA,
-      vjust = .5,
+      vjust = 0.5,
       hjust = 1.2,
       family = family,
       size = 1.25 * font_size / ggplot2::.pt
@@ -215,10 +215,10 @@ cm_plot <- function(
       label.margin = margin(l = 10, unit = "pt"),
       fill = NA,
       label.colour = NA,
-      lineheight = .9,
-      vjust = .5,
+      lineheight = 0.9,
+      vjust = 0.5,
       hjust = 0,
-      size = .8 * font_size / ggplot2::.pt,
+      size = 0.8 * font_size / ggplot2::.pt,
       family = family
     ) +
     scale_y_continuous(
@@ -226,7 +226,7 @@ cm_plot <- function(
       breaks = major_breaks,
       minor_breaks = minor_breaks
     ) +
-    scale_x_discrete(NULL, expand = expansion(add = .65)) +
+    scale_x_discrete(NULL, expand = expansion(add = 0.65)) +
     labs(
       caption = "*p* = Population proportion, *cp* = Conditional proportion"
     ) +
@@ -241,7 +241,7 @@ cm_plot <- function(
       strip.background = element_rect(fill = "gray33")
     ) +
     scale_color_grey() +
-    scale_fill_viridis_d(alpha = .2, begin = .1, end = .8)
+    scale_fill_viridis_d(alpha = 0.2, begin = 0.1, end = 0.8)
 }
 
 composite_score <- function(
@@ -266,7 +266,7 @@ composite_score <- function(
   if (length(sigma_x) != length(x)) {
     stop("x and mu_x must be the same length.")
   }
-  if ((nrow(R) != k) | (ncol(R) != k) | !is.matrix(R)) {
+  if ((nrow(R) != k) || (ncol(R) != k) || !is.matrix(R)) {
     stop("R must a square matrix with the same size as x.")
   }
   if (length(mu_composite) != 1) {
@@ -465,13 +465,13 @@ long_r <- function(
   age,
   interval,
   different = FALSE,
-  b0 = .716,
-  b1 = .003,
-  b2 = -.258,
+  b0 = 0.716,
+  b1 = 0.003,
+  b2 = -0.258,
   b3 = 0,
-  b4 = -.095,
-  b5 = -.138,
-  b6 = -.104
+  b4 = -0.095,
+  b5 = -0.138,
+  b6 = -0.104
 ) {
   age <- age - 20
   interval <- interval - 5
@@ -492,7 +492,7 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
           xdist = dist_normal(est_true, SEE)
         ),
         p_limits = c(0.000001, 0.999999),
-        .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - .5),
+        .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - 0.5),
         height = 0.925
       ) +
       geom_vline(
@@ -516,17 +516,17 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
         aes(xdist = dist_normal(est_true, SEE)),
         show_point = FALSE,
         p_limits = c(0.000001, 0.999999),
-        y = .2,
-        height = .2,
+        y = 0.2,
+        height = 0.2,
         slab_fill = fg,
         interval_color = fg,
-        slab_alpha = .3,
+        slab_alpha = 0.3,
         color = fg
       ) +
       geom_text(
         y = 0.2,
         color = fg,
-        lineheight = .85,
+        lineheight = 0.85,
         aes(label = paste0("Composite IQ\n", round(score))),
         size = 1.2 * font_size,
         size.unit = "pt",
@@ -541,13 +541,13 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
         size = font_size / .pt,
         family = myfont,
         lineheight = 0.85,
-        vjust = -.5,
+        vjust = -0.5,
         force_pull = 0,
         color = fg,
-        nudge_y = .02,
+        nudge_y = 0.02,
         min.segment.length = 0
       ) +
-      scale_fill_viridis_d(end = .9, begin = 0, alpha = .5) +
+      scale_fill_viridis_d(end = 0.9, begin = 0, alpha = 0.5) +
       theme_minimal(base_family = myfont, base_size = font_size) +
       theme(
         legend.position = "none",
@@ -609,7 +609,7 @@ make_outlier_table <- function(cm, d_iq, d_current, toggle, n) {
       p = prob_label(p, digits = 2, max_digits = 6),
       cp = prob_label(cp, digits = 2, max_digits = 6),
       Deviation = signs::signs(round(Score - Predicted, 1)),
-      Predicted = scales::number(Predicted, .1)
+      Predicted = scales::number(Predicted, 0.1)
     ) |>
     dplyr::select(
       Edition,
@@ -1163,7 +1163,7 @@ myreactabletheme <- reactableTheme(
 
 # server ----
 server <- function(input, output, session) {
-  # validatation rules ----
+  # validation rules ----
 
   ## valid person ----
   iv_person <- InputValidator$new()
@@ -1681,7 +1681,7 @@ server <- function(input, output, session) {
   #### family_edit_submit ----
   observeEvent(input$family_edit_submit, {
     req(input$family_edit_row)
-    if (iv$is_valid()) {
+    if (iv_family_add$is_valid()) {
       d_new <- tibble(
         Family = input$family_add_new,
         family_id = input$family_edit_row
@@ -1737,7 +1737,7 @@ server <- function(input, output, session) {
 
     current_data$Reliability <- signs::signs(
       current_data$Reliability,
-      accuracy = .01,
+      accuracy = 0.01,
       trim_leading_zeros = TRUE
     )
 
@@ -1745,7 +1745,7 @@ server <- function(input, output, session) {
       "\u2002",
       signs::signs(
         input$defaultReliability,
-        accuracy = .01,
+        accuracy = 0.01,
         trim_leading_zeros = TRUE
       ),
       "?"
@@ -1876,7 +1876,7 @@ server <- function(input, output, session) {
                       "Reliability",
                       value = NA_real_,
                       width = "100%",
-                      step = .01,
+                      step = 0.01,
                       max = 1,
                       min = 0
                     )
@@ -2080,7 +2080,7 @@ server <- function(input, output, session) {
               "Reliability",
               value = dr$Reliability,
               width = "100%",
-              step = .01,
+              step = 0.01,
               max = 1,
               min = 0
             )
@@ -2453,7 +2453,7 @@ server <- function(input, output, session) {
               "Weight",
               value = 1,
               width = "100%",
-              step = .1
+              step = 0.1
             ),
             selectInput(
               "score_flynn_new",
@@ -2651,7 +2651,7 @@ server <- function(input, output, session) {
               "Weight",
               value = dr_new$Weight,
               width = "100%",
-              step = .1
+              step = 0.1
             )
           )
         ),
@@ -2807,7 +2807,7 @@ server <- function(input, output, session) {
           label = "Current Effect size (points per decade)",
           value = 1.3,
           width = "100%",
-          step = .01
+          step = 0.01
         ),
         footer = tagList(
           modalButton("Cancel"),
@@ -2874,7 +2874,7 @@ server <- function(input, output, session) {
         ),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("flynn_edit_submit", "Add", class = "btn-primary")
+          actionButton("flynn_edit_submit", "Update", class = "btn-primary")
         ),
         easyClose = TRUE
       )
@@ -2883,9 +2883,9 @@ server <- function(input, output, session) {
 
   #### flynn_edit_submit ----
   observeEvent(input$flynn_edit_submit, {
-    if (iv_flynn_edit$is_valid()) {
+    if (iv_flynn$is_valid()) {
       d_new <- tibble(
-        Flynn = input$flynn_edit_new,
+        Flynn = input$flynn_add_new,
         flynn_id = input$flynn_edit_row
       )
 
@@ -2964,7 +2964,7 @@ server <- function(input, output, session) {
           label = "Effect size (points per decade)",
           value = 2.94,
           width = "100%",
-          step = .01
+          step = 0.01
         ),
         footer = tagList(
           modalButton("Cancel"),
@@ -3054,7 +3054,7 @@ server <- function(input, output, session) {
           label = "Effect size (points per decade)",
           value = d_fi$Effect,
           width = "100%",
-          step = .01
+          step = 0.01
         ),
         footer = tagList(
           modalButton("Cancel"),
@@ -3121,7 +3121,7 @@ server <- function(input, output, session) {
     # matrix(d_s$Score) |>
     # `rownames<-`(paste0(d_s$Edition, " (", d_s$Date, ")"))
 
-    bday <- isolate(input$dateBirthdate)
+    bday <- input$dateBirthdate
     # bday <- as.Date("2010-11-01")
 
     d_s <- rd_score() |>
@@ -3222,12 +3222,12 @@ server <- function(input, output, session) {
                     label = NULL, # Remove standard label for dense grid
                     value = signs::signs(
                       m_r[r, c],
-                      accuracy = .01,
+                      accuracy = 0.011,
                       trim_leading_zeros = TRUE
                     ),
                     max = 1,
                     min = -1,
-                    step = .01,
+                    step = 0.01,
                     width = "100%"
                   ),
                   class = "border border-primary-subtle corinput"
@@ -3342,8 +3342,8 @@ server <- function(input, output, session) {
       mutate(
         SEE = 15 * sqrt(rxx - rxx^2),
         est_true = rxx * (SS - 100) + 100,
-        UB = qnorm(.975) * SEE + est_true,
-        LB = qnorm(.025) * SEE + est_true,
+        UB = qnorm(0.975) * SEE + est_true,
+        LB = qnorm(0.0255) * SEE + est_true,
         CI = paste0(scales::number(LB, 1), "&ndash;", scales::number(UB, 1)),
         Percentile = as.character(
           as.numeric(
@@ -3528,7 +3528,7 @@ server <- function(input, output, session) {
     content = function(file) {
       library(officer)
       d_iq <- rd_current() |>
-        mutate(Corrected = round(Corrected), Age = scales::number(Age, .1)) |>
+        mutate(Corrected = round(Corrected), Age = scales::number(Age, 0.1)) |>
         dplyr::select(Test = Edition, Original = Score, Corrected, Date, Age) |>
         arrange(Date)
 
@@ -3643,14 +3643,14 @@ server <- function(input, output, session) {
       fg <- "gray5"
 
       d_s_original <- rd_current() %>%
-        rename(score = Corrected) |>
+        rename(score = Score) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
           est_true = Reliability * (score - 100) + 100
         )
 
       d_s_corrected <- rd_current() %>%
-        rename(score = Score) |>
+        rename(score = Corrected) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
           est_true = Reliability * (score - 100) + 100
@@ -3670,7 +3670,7 @@ server <- function(input, output, session) {
         fg = fg,
         bg = bg,
         font_size = 12,
-        line_alpha = .1
+        line_alpha = 0.1
       )
       ggCIQ_corrected <- make_ciq_plot(
         d_s = d_s_corrected,
@@ -3678,7 +3678,7 @@ server <- function(input, output, session) {
         fg = fg,
         bg = bg,
         font_size = 12,
-        line_alpha = .1
+        line_alpha = 0.1
       )
 
       dx |>
