@@ -1342,16 +1342,6 @@ server <- function(input, output, session) {
       if (isTruthy(input$txtPerson)) {
         fn <- paste0(input$txtPerson, "_", fn)
       }
-      showModal(modalDialog(
-        title = "File Export",
-        paste0(
-          "A file (",
-          fn,
-          ") has been exported to your browser's download folder. For safekeeping, move the file to a folder you can remember when you want to import the data."
-        ),
-        easyClose = TRUE,
-        footer = modalButton("Dismiss")
-      ))
       fn
     },
     content = function(file) {
@@ -1380,6 +1370,16 @@ server <- function(input, output, session) {
       )
 
       write_xlsx(d_list, path = file)
+      showModal(modalDialog(
+        title = "File Export",
+        paste0(
+          "A file (",
+          fn,
+          ") has been exported to your browser's download folder. For safekeeping, move the file to a folder you can remember when you want to import the data."
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Dismiss")
+      ))
     }
   )
 
@@ -2331,8 +2331,10 @@ server <- function(input, output, session) {
           ")"
         )
       ) |>
+      dplyr::filter(family_id == 1L) |>
       dplyr::select(Edition, edition_id) |>
       deframe()
+
     c_flynn <- rd_flynn() |>
       dplyr::select(Flynn, flynn_id) |>
       deframe()
@@ -2342,6 +2344,7 @@ server <- function(input, output, session) {
       deframe()
 
     c_battery <- rd_battery() |>
+      dplyr::filter(family_id == 1L) |>
       dplyr::select(Battery, battery_id) |>
       deframe()
 
