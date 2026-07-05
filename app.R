@@ -63,7 +63,11 @@ cm_plot <- function(
   font_size = 24,
   p_tail = 0.05,
   family = myfont,
-  score_digits = ifelse(min(x$sigma) >= 10, 0, 2)
+  score_digits = ifelse(min(x$sigma) >= 10, 0, 2),
+  fg = "black",
+  bg = "white",
+  bglite = "gray90",
+  fglite = "gray20"
 ) {
   if (length(unique(x$d_score$id)) > 1) {
     stop("Can only plot one case at a time")
@@ -141,7 +145,8 @@ cm_plot <- function(
       p_tail = p_tail,
       tail_alpha = 0.15,
       width = 0.85,
-      alpha = 0.6
+      alpha = 0.6,
+      tail_fill = fg
     ) +
     geom_normalviolin(
       mapping = aes(
@@ -154,17 +159,18 @@ cm_plot <- function(
       tail_alpha = 0.1,
       width = 0.85,
       p_tail = p_tail,
-      alpha = 0.3
+      alpha = 0.3,
+      tail_fill = fg
     ) +
-    geom_point(mapping = aes(color = id)) +
+    geom_point(color = fglite) +
     geom_richtext(
       mapping = aes(
         label = formatC(Score, score_digits, format = "f"),
         group = id
       ),
-      color = "black",
+      # color = fg,
       label.color = NA,
-      text.color = "black",
+      text.color = fglite,
       label.padding = margin(),
       label.margin = margin(r = 4, unit = "pt"),
       fill = NA,
@@ -179,7 +185,8 @@ cm_plot <- function(
         label = plabel
       ),
       # label.color = NA,
-      color = "gray10",
+      # color = fg,
+      text.color = fglite,
       label.padding = margin(),
       label.margin = margin(l = 10, unit = "pt"),
       fill = NA,
@@ -199,17 +206,25 @@ cm_plot <- function(
     labs(
       caption = "*p* = Population proportion, *cp* = Conditional proportion"
     ) +
-    theme_light(base_family = family, base_size = font_size) +
+    theme_light(
+      base_family = family,
+      base_size = font_size,
+      ink = fg,
+      paper = bg
+    ) +
     theme(
       legend.position = "none",
-      plot.caption = element_markdown(),
+      # plot.caption = element_markdown(color = fg),
       strip.text.x.top = element_markdown(
         lineheight = 1.3,
         margin = margin(t = 5, b = 3, unit = "mm")
+        # color = fglite
       ),
-      strip.background = element_rect(fill = "gray33")
+      # panel.background = element_rect(bg),
+      strip.background.x = element_rect(fill = fglite),
+      # axis.text = element_text(color = fglite),
+      plot.background = element_rect(bg)
     ) +
-    scale_color_grey() +
     scale_fill_viridis_d(alpha = 0.2, begin = 0.1, end = 0.8)
 }
 
@@ -645,7 +660,7 @@ d_score <- tibble(
   flynn_id = 1L
 ) |>
   arrange(Date) %>%
-  dplyr::filter(FALSE)
+  dplyr::filter(TRUE)
 
 d_flynn <- tibble(Flynn = c("Default", "Always 2.94"), flynn_id = 1:2)
 
@@ -765,8 +780,8 @@ ui <- page_navbar(
           suppressWarnings(
             dateInput(
               "dateBirthdate",
-              value = NA,
-              # value = "2000-10-10",
+              # value = NA,
+              value = "2000-10-10",
               label = tooltip(
                 span(
                   "Birthdate (YYYY-MM-DD)",
@@ -3416,7 +3431,32 @@ server <- function(input, output, session) {
     )
 
     output$plot_cm <- renderPlot(
-      cm_plot(cm, family = myfont),
+      {
+        if (is.logical(input$dark_mode)) {
+          isdark <- input$dark_mode
+        } else {
+          isdark <- input$dark_mode == "dark"
+        }
+        if (isdark) {
+          fg <- "white"
+          fglite <- "gray85"
+          bg <- "black"
+          bglite <- "gray10"
+        } else {
+          fg <- "black"
+          fglite <- "gray30"
+          bg <- "white"
+          bglite <- "gray90"
+        }
+        cm_plot(
+          cm,
+          family = myfont,
+          fg = fg,
+          bg = bg,
+          fglite = fglite,
+          bglite = bglite
+        )
+      },
       height = 700,
       width = 700 + 100 * n
     )
