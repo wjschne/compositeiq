@@ -660,7 +660,7 @@ d_score <- tibble(
   flynn_id = 1L
 ) |>
   arrange(Date) %>%
-  dplyr::filter(TRUE)
+  dplyr::filter(FALSE)
 
 d_flynn <- tibble(Flynn = c("Default", "Always 2.94"), flynn_id = 1:2)
 
