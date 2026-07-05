@@ -662,11 +662,11 @@ d_score <- tibble(
   arrange(Date) %>%
   dplyr::filter(FALSE)
 
-d_flynn <- tibble(Flynn = c("Default", "Always 2.94"), flynn_id = 1:2)
+d_flynn <- tibble(Flynn = c("Default", "Always 2.93"), flynn_id = 1:2)
 
 d_flynn_item <- tibble(
   Until = c(2007L, NA, NA),
-  Effect = c(2.94, 1.3, 2.94),
+  Effect = c(2.93, 1.3, 2.93),
   flynn_id = c(1L, 1L, 2L),
   flynn_item_id = 1:3
 )
@@ -1060,7 +1060,7 @@ ui <- page_navbar(
   ),
   ## flynn ----
   nav_panel(
-    "Norm Obsolescence",
+    "Flynn",
     value = "flynn",
     layout_sidebar(
       sidebar = sidebar(
@@ -1073,7 +1073,28 @@ ui <- page_navbar(
             class = "btn btn-primary"
           )
         ),
-        reactableOutput("grdFlynn")
+        reactableOutput("grdFlynn"),
+        span(
+          "The term",
+          tags$em("Flynn Effect"),
+          "refers to the long-term increases in IQ norms documented by ",
+          tags$a(
+            "Flynn (1987)",
+            href = "https://doi.org/10.1037/0033-2909.101.2.171"
+          ),
+          "and others. A meta-analysis by ",
+          tags$a(
+            "Trahan et al. (2014)",
+            href = "https://doi.org//10.1037/a0037173"
+          ),
+          "found that for Wechsler and similar tests, the average score increase was about 2.93 points per decade for most of the 20th century. In the years between the publication of the WAIS-IV (2008) and the WAIS-5 (2024), the rate was 1.30 points per decade ",
+          tags$a(
+            "(Winter et al., 2024)",
+            href = "https://doi.org/10.3390/jintelligence12110118",
+            .noWS = "after"
+          ),
+          ". In this app, the default norm obsolescence correction is therefore 2.93 points per decade until 2007 and 1.30 afterward. These values may be updated and refined as evidence accrues. The user can create custom rules as needed."
+        )
       ),
       div(
         style = "display: flex; gap: 10px;",
@@ -1111,7 +1132,7 @@ ui <- page_navbar(
   nav_item(input_dark_mode(id = "dark_mode")),
   nav_item(
     tooltip(
-      span("Privacy Note", bs_icon("info-circle-fill", class = "text-info")),
+      span("Privacy", bs_icon("info-circle-fill", class = "text-info")),
       tagList(
         h4("Privacy", class = "text-white"),
         p(
@@ -2937,7 +2958,7 @@ server <- function(input, output, session) {
         numericInput(
           inputId = "flynn_effect_new",
           label = "Effect size (points per decade)",
-          value = 2.94,
+          value = 2.93,
           width = "100%",
           step = 0.01
         ),
