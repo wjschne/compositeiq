@@ -780,8 +780,8 @@ ui <- page_navbar(
           suppressWarnings(
             dateInput(
               "dateBirthdate",
-              # value = NA,
-              value = "2000-10-10",
+              value = NA,
+              # value = "2000-10-10",
               label = tooltip(
                 span(
                   "Birthdate (YYYY-MM-DD)",
