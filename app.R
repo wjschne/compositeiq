@@ -95,7 +95,7 @@ cm_plot <- function(
     ", *p* = ",
     prob_label(x$dCM_p)
   )
-  x$d_score %>%
+  x$d_score |>
     mutate(
       SD = ifelse(
         test = is.na(zSEE),
@@ -123,7 +123,7 @@ cm_plot <- function(
         prob_label(p, digits = 2, max_digits = 4)
       ),
       plabel = paste0(myp, mycp)
-    ) %>%
+    ) |>
     ggplot(aes(
       x = Variable,
       y = Score,
@@ -168,7 +168,6 @@ cm_plot <- function(
         label = formatC(Score, score_digits, format = "f"),
         group = id
       ),
-      # color = fg,
       label.color = NA,
       text.color = fglite,
       label.padding = margin(),
@@ -184,8 +183,6 @@ cm_plot <- function(
         group = id,
         label = plabel
       ),
-      # label.color = NA,
-      # color = fg,
       text.color = fglite,
       label.padding = margin(),
       label.margin = margin(l = 10, unit = "pt"),
@@ -214,15 +211,11 @@ cm_plot <- function(
     ) +
     theme(
       legend.position = "none",
-      # plot.caption = element_markdown(color = fg),
       strip.text.x.top = element_markdown(
         lineheight = 1.3,
         margin = margin(t = 5, b = 3, unit = "mm")
-        # color = fglite
       ),
-      # panel.background = element_rect(bg),
       strip.background.x = element_rect(fill = fglite),
-      # axis.text = element_text(color = fglite),
       plot.background = element_rect(bg)
     ) +
     scale_fill_viridis_d(alpha = 0.2, begin = 0.1, end = 0.8)
@@ -592,7 +585,7 @@ make_cm <- function(r, d_current, d_iq, toggle = 1) {
 }
 
 make_outlier_table <- function(cm, d_iq, d_current, toggle, n) {
-  d_current <- d_current %>%
+  d_current <- d_current |>
     arrange(Date, Edition)
 
   cm$d_score[seq(1, n), ] |>
@@ -642,7 +635,7 @@ d_family <- d |>
   arrange(Family)
 
 d_battery <- d |>
-  arrange(Family, Battery) %>%
+  arrange(Family, Battery) |>
   dplyr::select(battery_id, Battery, family_id) |>
   unique()
 
@@ -659,7 +652,7 @@ d_score <- tibble(
   edition_id = c(54L, 66L, 16L),
   flynn_id = 1L
 ) |>
-  arrange(Date) %>%
+  arrange(Date) |>
   dplyr::filter(FALSE)
 
 d_flynn <- tibble(Flynn = c("Default", "Always 2.93"), flynn_id = 1:2)
@@ -675,25 +668,25 @@ d_flynn_item <- tibble(
 # db <- new_dm(list(
 #   Family = d_family,
 #   Battery = d_battery,
-#   Edition = d_edition %>% select(-family_id),
+#   Edition = d_edition |> select(-family_id),
 #   Flynn = d_flynn,
 #   FlynnItem = d_flynn_item,
 #   Score = d_score
-# )) %>%
-#   dm_add_pk(Family, columns = family_id, autoincrement = TRUE) %>%
-#   dm_add_pk(Battery, columns = battery_id, autoincrement = TRUE) %>%
-#   dm_add_pk(Edition, columns = edition_id, autoincrement = TRUE) %>%
-#   dm_add_pk(Flynn, columns = flynn_id, autoincrement = TRUE) %>%
-#   dm_add_pk(Score, columns = score_id, autoincrement = TRUE) %>%
-#   dm_add_pk(FlynnItem, columns = flynn_item_id, autoincrement = TRUE) %>%
-#   dm_add_fk(Battery, family_id, Family) %>%
-#   dm_add_fk(Edition, battery_id, Battery) %>%
-#   dm_add_fk(Score, edition_id, Edition) %>%
-#   dm_add_fk(Score, flynn_id, Flynn) %>%
+# )) |>
+#   dm_add_pk(Family, columns = family_id, autoincrement = TRUE) |>
+#   dm_add_pk(Battery, columns = battery_id, autoincrement = TRUE) |>
+#   dm_add_pk(Edition, columns = edition_id, autoincrement = TRUE) |>
+#   dm_add_pk(Flynn, columns = flynn_id, autoincrement = TRUE) |>
+#   dm_add_pk(Score, columns = score_id, autoincrement = TRUE) |>
+#   dm_add_pk(FlynnItem, columns = flynn_item_id, autoincrement = TRUE) |>
+#   dm_add_fk(Battery, family_id, Family) |>
+#   dm_add_fk(Edition, battery_id, Battery) |>
+#   dm_add_fk(Score, edition_id, Edition) |>
+#   dm_add_fk(Score, flynn_id, Flynn) |>
 #   dm_add_fk(FlynnItem, flynn_id, Flynn) |>
 #   dm_add_uk(FlynnItem, c(flynn_id, Until), check = TRUE)
 #
-# db %>% dm::dm_examine_constraints()
+# db |> dm::dm_examine_constraints()
 
 # dm_validate(db)
 # ui ----
@@ -1013,11 +1006,9 @@ ui <- page_navbar(
   ),
   ## family ----
   nav_panel(
-    "Edit Battery",
+    "Tests",
     value = "battery",
-    # page_fillable(
     layout_sidebar(
-      # border = FALSE,
       sidebar = sidebar(
         open = "always",
         width = 425,
@@ -1401,7 +1392,7 @@ server <- function(input, output, session) {
         Family = rd_family(),
         Flynn = rd_flynn(),
         Flynn_Item = rd_flynn_item(),
-        Correlation = r_cor() %>%
+        Correlation = r_cor() |>
           as_tibble(rownames = "rowid")
       )
 
@@ -1478,8 +1469,8 @@ server <- function(input, output, session) {
         if (s == "Correlation") {
           if (nrow(dd) > 0L) {
             r_cor(
-              dd %>%
-                column_to_rownames("rowid") %>%
+              dd |>
+                column_to_rownames("rowid") |>
                 as.matrix()
             )
           } else {
@@ -1706,9 +1697,9 @@ server <- function(input, output, session) {
   sort_edition <- function(d) {
     d_b <- isolate(rd_battery())
     d_f <- isolate(rd_family())
-    d %>%
-      left_join(d_f, by = join_by(family_id)) %>%
-      left_join(d_b, by = join_by(battery_id, family_id)) %>%
+    d |>
+      left_join(d_f, by = join_by(family_id)) |>
+      left_join(d_b, by = join_by(battery_id, family_id)) |>
       dplyr::select(Family, Battery, everything()) |>
       arrange(Family, Battery, Year_Published) |>
       dplyr::select(-Family)
@@ -1953,8 +1944,8 @@ server <- function(input, output, session) {
       fid <- new_id(rd_family(), "family_id")
 
       rd_family(
-        isolate(rd_family()) %>%
-          add_row(family_id = fid, Family = new_fam) %>%
+        isolate(rd_family()) |>
+          add_row(family_id = fid, Family = new_fam) |>
           arrange(Family)
       )
     }
@@ -1972,8 +1963,8 @@ server <- function(input, output, session) {
       bid <- new_id(rd_battery(), "battery_id")
 
       rd_battery(
-        isolate(rd_battery()) %>%
-          add_row(battery_id = bid, Battery = new_batt, family_id = fid) %>%
+        isolate(rd_battery()) |>
+          add_row(battery_id = bid, Battery = new_batt, family_id = fid) |>
           arrange(Battery)
       )
     }
@@ -2294,9 +2285,7 @@ server <- function(input, output, session) {
               Weight,
               Flynn
             ),
-          # theme = myreactabletheme,
           columns = list(
-            # Battery = colDef(width = 400),
             Published = colDef(align = "center"),
             Normed = colDef(align = "center"),
             Weight = colDef(align = "center"),
@@ -2386,9 +2375,6 @@ server <- function(input, output, session) {
 
     iv_score$disable()
     iv_score$enable()
-    # updateSelectInput(inputId = "score_family_new", selected = NA)
-    # updateSelectInput(inputId = "score_battery_new", selected = NA)
-    # updateSelectInput(inputId = "score_edition_new", selected = NA)
 
     showModal(
       modalDialog(
@@ -2402,7 +2388,6 @@ server <- function(input, output, session) {
               "Select Family",
               width = "100%",
               choices = c_family,
-              # selected = c_family_i,
               multiple = FALSE,
               selectize = FALSE,
               size = length(c_family)
@@ -2584,6 +2569,17 @@ server <- function(input, output, session) {
         flynn_id = as.integer(input$score_flynn_new),
         score_id = new_score_id
       )
+
+      d_duplicate <- rd_score() |>
+        dplyr::filter(edition_id == d_new$edition_id, Date == d_new$Date)
+
+      if (nrow(d_duplicate) > 0L) {
+        showNotification(
+          "Same test with same date not allowed.",
+          type = "error"
+        )
+      }
+      req(nrow(d_duplicate) == 0L)
 
       rd_score(
         isolate(rd_score()) |>
@@ -2995,7 +2991,7 @@ server <- function(input, output, session) {
         rows_insert(d_new, by = "flynn_item_id") |>
         arrange(flynn_id, Until)
 
-      nc <- count(d_fi |> dplyr::select(flynn_id, Until), flynn_id, Until) |>
+      nc <- count(dplyr::select(d_fi, flynn_id, Until), flynn_id, Until) |>
         dplyr::filter(n > 1) |>
         nrow()
 
@@ -3021,12 +3017,10 @@ server <- function(input, output, session) {
     rd_flynn_item(di_new)
   })
 
-  hide_until <- reactiveVal(FALSE)
-
   ### edit_flynnItem ----
   observeEvent(input$flynn_item_edit_row, {
     req(input$flynn_item_edit_row)
-    d_fi <- rd_flynn_item() %>%
+    d_fi <- rd_flynn_item() |>
       dplyr::filter(flynn_item_id == input$flynn_item_edit_row)
     r_row(list(id = d_fi$flynn_item_id, data = d_fi))
     iv_flynn_item$disable()
@@ -3073,7 +3067,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$edit_flynn_item_submit, {
     req(input$flynn_item_edit_row)
-    d_fi <- rd_flynn_item() %>%
+    d_fi <- rd_flynn_item() |>
       dplyr::filter(flynn_item_id == input$flynn_item_edit_row)
 
     d_new <- tibble(
@@ -3087,7 +3081,7 @@ server <- function(input, output, session) {
       rows_update(d_new, by = c("flynn_item_id", "flynn_id")) |>
       arrange(flynn_id, Until)
 
-    nc <- count(d_fi |> dplyr::select(flynn_id, Until), flynn_id, Until) |>
+    nc <- count(dplyr::select(d_fi, flynn_id, Until), flynn_id, Until) |>
       dplyr::filter(n > 1) |>
       nrow()
 
@@ -3111,14 +3105,8 @@ server <- function(input, output, session) {
       nav_show("mainPanel", "outlier")
     }
     req(n > 1L)
-    # d_s <- isolate(rd_score()) |>
-    #   left_join(isolate(rd_edition()), join_by("edition_id")) |>
-
-    # matrix(d_s$Score) |>
-    # `rownames<-`(paste0(d_s$Edition, " (", d_s$Date, ")"))
 
     bday <- input$dateBirthdate
-    # bday <- as.Date("2010-11-01")
 
     d_s <- rd_score() |>
       left_join(rd_edition(), join_by("edition_id")) |>
@@ -3156,8 +3144,6 @@ server <- function(input, output, session) {
     m_r[cbind(d_r$row_id_x, d_r$row_id_y)] <- d_r$r
     m_r[cbind(d_r$row_id_y, d_r$row_id_x)] <- d_r$r
     diag(m_r) <- 1
-
-    # diag(m_r) <- 1
     colnames(m_r) <- d_s$Edition
     rownames(m_r) <- d_s$Edition
     r_cor_estimate(m_r)
@@ -3243,7 +3229,6 @@ server <- function(input, output, session) {
     tags$table(
       class = "cortable",
       table_rows[1],
-      # class = "table table-bordered border-primary",
       tags$tbody(table_rows[-1])
     )
   })
@@ -3262,8 +3247,6 @@ server <- function(input, output, session) {
       t() |>
       `colnames<-`(c("x", "y")) |>
       as_tibble()
-    mirror_ids <- paste0("cell_", pair_id$y, "_", pair_id$x)
-    input_ids <- paste0("display_", pair_id$x, "_", pair_id$y)
     vals <- purrr::pmap_dbl(pair_id, \(x, y) {
       mirror_id <- paste0("cell_", y, "_", x)
       if (is.null(input[[mirror_id]])) {
@@ -3412,21 +3395,21 @@ server <- function(input, output, session) {
     }
 
     if (input$toggle_correct_plot) {
-      d_s <- rd_current() %>%
+      d_s <- rd_current() |>
         rename(score = Corrected)
     } else {
-      d_s <- rd_current() %>%
+      d_s <- rd_current() |>
         rename(score = Score)
     }
 
-    d_s <- d_s %>%
+    d_s <- d_s |>
       mutate(
         SEE = 15 * sqrt(Reliability - Reliability^2),
         est_true = Reliability * (score - 100) + 100
       )
 
     d_iq <- rd_iq() |>
-      slice(ifelse(input$toggle_correct_plot, 2L, 1L)) %>%
+      slice(ifelse(input$toggle_correct_plot, 2L, 1L)) |>
       rename(score = SS)
 
     make_ciq_plot(d_s, d_iq, fg, bg)
@@ -3661,14 +3644,14 @@ server <- function(input, output, session) {
       bg <- "white"
       fg <- "gray5"
 
-      d_s_original <- rd_current() %>%
+      d_s_original <- rd_current() |>
         rename(score = Score) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
           est_true = Reliability * (score - 100) + 100
         )
 
-      d_s_corrected <- rd_current() %>%
+      d_s_corrected <- rd_current() |>
         rename(score = Corrected) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
@@ -3676,11 +3659,11 @@ server <- function(input, output, session) {
         )
 
       d_iq_original <- rd_iq() |>
-        slice(1L) %>%
+        slice(1L) |>
         rename(score = SS)
 
       d_iq_corrected <- rd_iq() |>
-        slice(2L) %>%
+        slice(2L) |>
         rename(score = SS)
 
       ggCIQ_original <- make_ciq_plot(
