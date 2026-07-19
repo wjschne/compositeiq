@@ -463,10 +463,10 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
   suppressWarnings(
     ggplot(d_iq, aes(x = score)) +
       stat_slab(
-        data = tibble(score = 100, est_true = 100, SEE = 15),
+        data = tibble(score = 100, ci_center = 100, ci_sd = 15),
         mapping = aes(
           fill = after_stat(level),
-          xdist = dist_normal(est_true, SEE)
+          xdist = dist_normal(ci_center, ci_sd)
         ),
         p_limits = c(0.000001, 0.999999),
         .width = 2 * (pnorm(seq(105, 160, 5), 100, 15) - 0.5),
@@ -479,7 +479,7 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
         alpha = line_alpha
       ) +
       stat_slabinterval(
-        aes(xdist = dist_normal(est_true, SEE)),
+        aes(xdist = dist_normal(ci_center, ci_sd)),
         data = d_s,
         show_point = FALSE,
         p_limits = c(0.000001, 0.999999),
@@ -490,7 +490,7 @@ make_ciq_plot <- function(d_s, d_iq, fg, bg, font_size = 20, line_alpha = 0.4) {
         color = fg
       ) +
       stat_slabinterval(
-        aes(xdist = dist_normal(est_true, SEE)),
+        aes(xdist = dist_normal(ci_center, ci_sd)),
         show_point = FALSE,
         p_limits = c(0.000001, 0.999999),
         y = 0.2,
@@ -653,7 +653,7 @@ d_score <- tibble(
   flynn_id = 1L
 ) |>
   arrange(Date) |>
-  dplyr::filter(FALSE)
+  dplyr::filter(TRUE)
 
 d_flynn <- tibble(Flynn = c("Default", "Always 2.93"), flynn_id = 1:2)
 
@@ -871,6 +871,19 @@ ui <- page_navbar(
     h4("Composite IQ", id = "hciq"),
     div(
       reactableOutput("grdIQ", height = "auto")
+    ),
+    fluidRow(
+      id = "ci_row",
+      radioButtons(
+        width = "100%",
+        "ci",
+        "Confidence Interval Type",
+        c(
+          "Rescaled-True-Score Centered (Schmukle, 2026)",
+          "True-Scored Centered (Kelley, 1927)",
+          "Observed-Score Centered (Gullikson, 1950)"
+        )
+      )
     ),
     tags$hr(),
     fluidRow(
@@ -1113,10 +1126,58 @@ ui <- page_navbar(
       style = "background-color: white;"
     ),
     h5("Confidence Intervals"),
+    h6("Rescaled-True-Score Centered (Schmukle, 2026)"),
+    tags$img(
+      src = "ci_equation_rescaled.svg",
+      width = 738 * 1.5,
+      style = "background-color: white;"
+    ),
+    tags$p(
+      "This is a conditional confidence interval. This is a conditional confidence interval. Given a known observed score, it contains the true score 95% of the time. It is equivalent to a Bayesian credible interval of the true score when the true score is scaled to have the same standard deviation as the observed score."
+    ),
+    tags$p(
+      "Schmukle, S. C. (2026). Unbiased confidence intervals for psychological testing: The regression-based true score approach with scale correction.",
+      tags$em("Assessment, 33", .noWS = "after"),
+      "(5), 817–825.",
+      tags$a(
+        href = "https://doi.org/10.1177/10731911251362532",
+        "https://doi.org/10.1177/10731911251362532"
+      )
+    ),
+    h6("True-Scored Centered (Kelley, 1927)"),
     tags$img(
       src = "ci_equation.svg",
-      width = 1000,
+      width = 744 * 1.5,
       style = "background-color: white;"
+    ),
+    tags$p(
+      "This is a conditional confidence interval. Given a known observed score, it contains the true score 95% of the time. It is equivalent to a Bayesian credible interval of the true score in its original metric."
+    ),
+    tags$p(
+      "Kelley, T. L. (1927).",
+      tags$em("Interpretation of educational measurements."),
+      "World Book Company.",
+      tags$a(
+        href = "https://psycnet.apa.org/record/1928-00533-000",
+        "https://psycnet.apa.org/record/1928-00533-000"
+      )
+    ),
+    h6("Observed-Score Centered (Gullikson, 1950)"),
+    tags$img(
+      src = "ci_equation_classical.svg",
+      width = 497 * 1.5,
+      style = "background-color: white;"
+    ),
+    tags$p(
+      "This is an unconditional confidence interval. It contains the true score of any observed score 95% of the time, even if it is unknown."
+    ),
+    tags$p(
+      "Gulliksen, H. (1950).",
+      tags$em("Theory of mental tests. Wiley."),
+      tags$a(
+        href = "https://doi.org/10.4324/9780203052150",
+        "https://doi.org/10.4324/9780203052150"
+      )
     )
   ),
   nav_spacer(),
@@ -2176,11 +2237,13 @@ server <- function(input, output, session) {
         if (nrow(rd_iq()) > 1L) {
           shinyjs::show("hciq")
           shinyjs::show("make_report")
+          shinyjs::show("ci_row")
         }
       }
     } else {
       shinyjs::hide("hidden_add_score")
       shinyjs::hide("hciq")
+      shinyjs::hide("ci_row")
       shinyjs::hide("make_report")
     }
     req(input$dateBirthdate)
@@ -3275,14 +3338,17 @@ server <- function(input, output, session) {
     req(input$mainPanel == "score")
     req(input$defaultReliability)
     req(rd_current())
+    req(input$ci)
     cor_n(nrow(rd_score()))
     shinyjs::hide("hciq")
+    shinyjs::hide("ci_row")
     req(cor_n() > 1L)
     if (!isTruthy(r_cor())) {
       r_cor(r_cor_estimate())
     }
     req(r_cor())
     shinyjs::show("hciq")
+    shinyjs::show("ci_row")
 
     m_r <- r_cor()
     d_s <- rd_current() |>
@@ -3318,9 +3384,28 @@ server <- function(input, output, session) {
       ) |>
       mutate(
         SEE = 15 * sqrt(rxx - rxx^2),
+        SEM = 15 * sqrt(1 - rxx),
         est_true = rxx * (SS - 100) + 100,
-        UB = qnorm(0.975) * SEE + est_true,
-        LB = qnorm(0.025) * SEE + est_true,
+        rest_true = sqrt(rxx) * (SS - 100) + 100,
+        ci_type = input$ci
+      ) |>
+      mutate(
+        ci_sd = if_else(
+          ci_type == "True-Scored Centered (Kelley, 1927)",
+          SEE,
+          SEM
+        ),
+        ci_center = if_else(
+          ci_type == "True-Scored Centered (Kelley, 1927)",
+          est_true,
+          if_else(
+            ci_type == "Rescaled-True-Score Centered (Schmukle, 2026)",
+            rest_true,
+            SS
+          )
+        ),
+        UB = qnorm(0.975) * ci_sd + ci_center,
+        LB = qnorm(0.025) * ci_sd + ci_center,
         CI = paste0(scales::number(LB, 1), "&ndash;", scales::number(UB, 1)),
         Percentile = as.character(
           as.numeric(
@@ -3337,7 +3422,18 @@ server <- function(input, output, session) {
     rd_iq(d_iq)
 
     d_display <- d_iq |>
-      dplyr::select(-UB, -LB, -SEE, -data, -est_true) |>
+      dplyr::select(
+        -UB,
+        -LB,
+        -SEE,
+        -data,
+        -est_true,
+        -rest_true,
+        -ci_center,
+        -ci_sd,
+        -SEM,
+        -ci_type
+      ) |>
       rename(Reliability = rxx, type = name) |>
       mutate(
         SS = round(SS, 0) |> as.integer() |> as.character(),
@@ -3405,7 +3501,26 @@ server <- function(input, output, session) {
     d_s <- d_s |>
       mutate(
         SEE = 15 * sqrt(Reliability - Reliability^2),
-        est_true = Reliability * (score - 100) + 100
+        SEM = 15 * sqrt(1 - Reliability),
+        est_true = Reliability * (score - 100) + 100,
+        rest_true = sqrt(Reliability) * (score - 100) + 100,
+        ci_type = input$ci
+      ) |>
+      mutate(
+        ci_center = ifelse(
+          ci_type == "Rescaled-True-Score Centered (Schmukle, 2026)",
+          rest_true,
+          if_else(
+            ci_type == "True-Scored Centered (Kelley, 1927)",
+            est_true,
+            score
+          )
+        ),
+        ci_sd = if_else(
+          ci_type == "True-Scored Centered (Kelley, 1927)",
+          SEE,
+          SEM
+        )
       )
 
     d_iq <- rd_iq() |>
@@ -3537,7 +3652,16 @@ server <- function(input, output, session) {
       d_ciq <- rd_iq() |>
         mutate(LB = round(LB), UB = round(UB)) |>
         unite(CI, LB, UB, sep = "\u2013") |>
-        dplyr::select(-SEE, -data, -est_true) |>
+        dplyr::select(
+          -est_true,
+          -SEE,
+          -data,
+          -rest_true,
+          -ci_center,
+          -ci_sd,
+          -SEM,
+          -ci_type
+        ) |>
         rename(Reliability = rxx, type = name) |>
         mutate(
           SS = round(SS, 0) |> as.integer() |> as.character(),
@@ -3648,14 +3772,52 @@ server <- function(input, output, session) {
         rename(score = Score) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
-          est_true = Reliability * (score - 100) + 100
+          est_true = Reliability * (score - 100) + 100,
+          SEM = 15 * sqrt(1 - Reliability),
+          rest_true = sqrt(Reliability) * (score - 100) + 100,
+          ci_type = input$ci
+        ) |>
+        mutate(
+          ci_sd = if_else(
+            ci_type == "True-Scored Centered (Kelley, 1927)",
+            SEE,
+            SEM
+          ),
+          ci_center = if_else(
+            ci_type == "True-Scored Centered (Kelley, 1927)",
+            est_true,
+            if_else(
+              ci_type == "Rescaled-True-Score Centered (Schmukle, 2026)",
+              rest_true,
+              score
+            )
+          )
         )
 
       d_s_corrected <- rd_current() |>
         rename(score = Corrected) |>
         mutate(
           SEE = 15 * sqrt(Reliability - Reliability^2),
-          est_true = Reliability * (score - 100) + 100
+          est_true = Reliability * (score - 100) + 100,
+          SEM = 15 * sqrt(1 - Reliability),
+          rest_true = sqrt(Reliability) * (score - 100) + 100,
+          ci_type = input$ci
+        ) |>
+        mutate(
+          ci_sd = if_else(
+            ci_type == "True-Scored Centered (Kelley, 1927)",
+            SEE,
+            SEM
+          ),
+          ci_center = if_else(
+            ci_type == "True-Scored Centered (Kelley, 1927)",
+            est_true,
+            if_else(
+              ci_type == "Rescaled-True-Score Centered (Schmukle, 2026)",
+              rest_true,
+              score
+            )
+          )
         )
 
       d_iq_original <- rd_iq() |>
