@@ -881,7 +881,7 @@ ui <- page_navbar(
         c(
           "Rescaled-True-Score Centered (Schmukle, 2026)",
           "True-Scored Centered (Kelley, 1927)",
-          "Observed-Score Centered (Gullikson, 1950)"
+          "Observed-Score Centered (Gulliksen, 1950)"
         )
       )
     ),
@@ -1162,7 +1162,7 @@ ui <- page_navbar(
         "https://psycnet.apa.org/record/1928-00533-000"
       )
     ),
-    h6("Observed-Score Centered (Gullikson, 1950)"),
+    h6("Observed-Score Centered (Gulliksen, 1950)"),
     tags$img(
       src = "ci_equation_classical.svg",
       width = 497 * 1.5,
