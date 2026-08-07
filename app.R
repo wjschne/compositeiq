@@ -647,9 +647,9 @@ d_edition <- d |>
 d_score <- tibble(
   score_id = 1:3,
   Score = c(75, 70, 72),
-  Date = (as.Date(c("2026-06-02", "2021-04-05", "2024-01-15"))),
+  Date = (as.Date(c("1979-06-02", "2021-04-05", "2024-01-15"))),
   Weight = 1,
-  edition_id = c(54L, 66L, 16L),
+  edition_id = c(52L, 66L, 16L),
   flynn_id = 1L
 ) |>
   arrange(Date) |>
@@ -774,7 +774,7 @@ ui <- page_navbar(
             dateInput(
               "dateBirthdate",
               value = NA,
-              # value = "2000-10-10",
+              # value = "1970-07-15",
               label = tooltip(
                 span(
                   "Birthdate (YYYY-MM-DD)",
@@ -1351,7 +1351,16 @@ server <- function(input, output, session) {
           is.na(date_until),
           administration_date,
           date_until
-        ),
+        )
+      ) |>
+      mutate(
+        date_until = if_else(
+          date_until > administration_date,
+          administration_date,
+          date_until
+        )
+      ) |>
+      mutate(
         years_elapsed = interval(date_from, date_until) / dyears(1),
         correction = years_elapsed * Effect / -10
       ) |>
@@ -1401,7 +1410,7 @@ server <- function(input, output, session) {
         title = "File Export",
         paste0(
           "A file (",
-          fn,
+          file,
           ") has been exported to your browser's download folder. For safekeeping, move the file to a folder you can remember when you want to import the data."
         ),
         easyClose = TRUE,
